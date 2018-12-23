@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Football Player</title>
+    <style>
+        body{margin: 0; overflow: hidden;}
+        canvas {width: 100%; height: 100%;}
+    </style>
+</head>
+<body>
+        <div id="scene"></div>
+
+        <script src="node_modules/three/build/three.js"></script>  
+        <script src="node_modules/three/examples/js/loaders/OBJLoader.js"></script>
+<!--        <script src=""></script>-->
+        <script src="node_modules/three/examples/js/controls/OrbitControls.js"></script>
+		<script src="node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
+
+        <script>
+            let scene,
+                renderer,
+                container,
+                width,
+                height;
+            let camera,
+                controls,
+                fov, aspect, near, far;
+            let Playermixer,clock;
+
+            init();
+            animate();
+            function init(){
+                width = window.innerWidth;
+                height = window.innerHeight;
+
+                fov = 50;
+                aspect = width / height;
+                near = 1;
+                far = 2000;
+
+                scene = new THREE.Scene();
+
+                camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+                camera.position.set(0,50,150);
+                camera.lookAt(new THREE.Vector3(0,0,0));
+
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(width,height);
+                renderer.setClearColor( 0xfff6e6 );
+
+                container = document.getElementById('scene');
+                container.appendChild(renderer.domElement);
+                
+                controls = new THREE.OrbitControls( camera, renderer.domElement );
+                controls.addEventListener( 'change', function() { renderer.render(scene, camera); } );
+                controls.staticMoving = true;
+                
+                lighting();
+                PlayerLoad();
+                RobotLoad();
+                // lok after render function for the rest ^_^ 
+                window.addEventListener( 'resize', onWindowResize, false );
+
+                clock= new THREE.Clock();
+            }
+
+            function lighting() {
+              const light = new THREE.DirectionalLight( 0xffffff, 1);
+              light.position.set( -50, 100, 50 );
+              light.castShadow = true;
+
+              const d = 100;
+              light.shadowCameraLeft = -d;
+              light.shadowCameraRight = d;
+              light.shadowCameraTop = d;
+              light.shadowCameraBottom = -d;
+
+              light.shadowCameraFar = 1000;
+
+              scene.add( light );
+              scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.6 ) );
+              scene.add( new THREE.AmbientLight(0xa59f75, 0.6) );
+            }
+            let objectPlayer;
+            function PlayerLoad(){
+                let loader = new THREE.GLTFLoader();
+				loader.load( 'RobotExpressive/RobotExpressive.glb',function (gltf) {
+                    let object = gltf.scene;
+                    object.scale.set(10,10,10);
+                    object.position.set(-40,0,20);
+                    object.rotation.set(0,0.4,0);
+                    Playermixer = new THREE.AnimationMixer( object );
+                    console.log(gltf.animations.length);
+                    let walk;
+                    for(let i=0;i<gltf.animations.length;i++){
+                        let clip=gltf.animations[i];
+                        if(clip.name === 'Walking'){
+                            walk=clip;
+                        }
+                    }
+					let action = Playermixer.clipAction( walk );
+					action.play();
+
+					scene.add( object );
+                });
+
+            }
+            function RobotLoad(){
+                let loader = new THREE.GLTFLoader();
+				loader.load( 'Animated Human by @Quaternius/Animated Human.glb',function (gltf) {
+                    let object = gltf.scene;
+                    
+                    object.scale.set(10,10,10);
+                    object.position.set(40,0,20);
+					object.rotation.set(0,-0.4,0);
+                    scene.add( object );
+				});
+            }
+            function onWindowResize() {
+				width = window.innerWidth;
+				height = window.innerHeight;
+                aspect=width/height;
+				
+                renderer.setSize( width, height );
+				camera.aspect = aspect;
+				camera.updateProjectionMatrix();
+			}
+            function animate(){
+                requestAnimationFrame( animate );
+                update();
+                render();
+            }
+            function update(){
+                delta = clock.getDelta();
+                let time = Date.now() * 0.05;
+				Playermixer.update( delta *0.6 );
+            } 
+            function render(){
+                renderer.render( scene, camera );
+            }
+            // for any test
+            let shape,shapeGeometry;
+            function getCube(){
+                shapeGeometry = new THREE.BoxGeometry(30,30,30);
+                shape = new THREE.Mesh(
+                    shapeGeometry,
+                    new THREE.MeshStandardMaterial({color:0xffffff, map:texture2})
+                );
+                shape.position.set(0,20,0);
+                shape.rotateX(-Math.PI/2)
+                scene.add(shape); 
+            }
+            function panel(){
+                let plane = new THREE.Mesh(
+                    new THREE.CircleGeometry( 60,360),
+                    new THREE.MeshStandardMaterial( {map:texture1} )
+                );
+                plane.rotateX(-Math.PI/2);
+                scene.add( plane );
+            }
+        </script>
+</body>
+</html>
