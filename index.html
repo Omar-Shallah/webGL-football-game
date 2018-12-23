@@ -61,19 +61,11 @@
                 lighting();
                 PlayerLoad();
                 RobotLoad();
+                // lok after render function for the rest ^_^ 
+                window.addEventListener( 'resize', onWindowResize, false );
+
                 clock= new THREE.Clock();
             }
-            function panel(){
-                // A mesh is created from the geometry and material, then added to the scene
-                
-                let plane = new THREE.Mesh(
-                    new THREE.CircleGeometry( 60,360),
-                    new THREE.MeshStandardMaterial( {map:texture1} )
-                );
-                plane.rotateX(-Math.PI/2);
-                scene.add( plane );
-            }
-            
 
             function lighting() {
               const light = new THREE.DirectionalLight( 0xffffff, 1);
@@ -127,6 +119,15 @@
                     scene.add( object );
 				});
             }
+            function onWindowResize() {
+				width = window.innerWidth;
+				height = window.innerHeight;
+                aspect=width/height;
+				
+                renderer.setSize( width, height );
+				camera.aspect = aspect;
+				camera.updateProjectionMatrix();
+			}
             function animate(){
                 requestAnimationFrame( animate );
                 update();
@@ -151,6 +152,14 @@
                 shape.position.set(0,20,0);
                 shape.rotateX(-Math.PI/2)
                 scene.add(shape); 
+            }
+            function panel(){
+                let plane = new THREE.Mesh(
+                    new THREE.CircleGeometry( 60,360),
+                    new THREE.MeshStandardMaterial( {map:texture1} )
+                );
+                plane.rotateX(-Math.PI/2);
+                scene.add( plane );
             }
         </script>
 </body>
