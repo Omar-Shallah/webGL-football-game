@@ -11,40 +11,147 @@
     </style>
 </head>
 <body>
-    <script src="./node_modules/three/build/three.js"></script>
-    <script>
-        	var scene = new THREE.Scene();
-			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+        <div id="scene"></div>
 
-			var renderer = new THREE.WebGLRenderer();
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			document.body.appendChild( renderer.domElement );
-			// Making Responsive scene //
-			window.addEventListener('resize',function(){
-				var width = window.innerWidth;
-				var height = window.innerHeight;
-				renderer.setSize(width,height);
-				camera.aspect = width/height;
-				camera.updateProjectionMatrix();
-			});
+        <script src="node_modules/three/build/three.js"></script>  
+        <script src="node_modules/three/examples/js/loaders/OBJLoader.js"></script>
+<!--        <script src=""></script>-->
+        <script src="node_modules/three/examples/js/controls/OrbitControls.js"></script>
+		<script src="node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
 
-			var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-			var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-			var cube = new THREE.Mesh( geometry, material );
-			scene.add( cube );
+        <script>
+            let scene,
+                renderer,
+                container,
+                width,
+                height;
+            let camera,
+                controls,
+                fov, aspect, near, far;
+            let Playermixer,clock;
 
-			camera.position.z = 5;
+            init();
+            animate();
+            function init(){
+                width = window.innerWidth;
+                height = window.innerHeight;
 
-			var animate = function () {
-				requestAnimationFrame( animate );
+                fov = 50;
+                aspect = width / height;
+                near = 1;
+                far = 2000;
 
-				cube.rotation.x += 0.01;
-				cube.rotation.y += 0.01;
+                scene = new THREE.Scene();
 
-				renderer.render( scene, camera );
-			};
+                camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+                camera.position.set(0,50,150);
+                camera.lookAt(new THREE.Vector3(0,0,0));
 
-			animate();
-    </script>
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(width,height);
+                renderer.setClearColor( 0xfff6e6 );
+
+                container = document.getElementById('scene');
+                container.appendChild(renderer.domElement);
+                
+                controls = new THREE.OrbitControls( camera, renderer.domElement );
+                controls.addEventListener( 'change', function() { renderer.render(scene, camera); } );
+                controls.staticMoving = true;
+                
+                lighting();
+                PlayerLoad();
+                RobotLoad();
+                clock= new THREE.Clock();
+            }
+            function panel(){
+                // A mesh is created from the geometry and material, then added to the scene
+                
+                let plane = new THREE.Mesh(
+                    new THREE.CircleGeometry( 60,360),
+                    new THREE.MeshStandardMaterial( {map:texture1} )
+                );
+                plane.rotateX(-Math.PI/2);
+                scene.add( plane );
+            }
+            
+
+            function lighting() {
+              const light = new THREE.DirectionalLight( 0xffffff, 1);
+              light.position.set( -50, 100, 50 );
+              light.castShadow = true;
+
+              const d = 100;
+              light.shadowCameraLeft = -d;
+              light.shadowCameraRight = d;
+              light.shadowCameraTop = d;
+              light.shadowCameraBottom = -d;
+
+              light.shadowCameraFar = 1000;
+
+              scene.add( light );
+              scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.6 ) );
+              scene.add( new THREE.AmbientLight(0xa59f75, 0.6) );
+            }
+            let objectPlayer;
+            function PlayerLoad(){
+                let loader = new THREE.GLTFLoader();
+				loader.load( 'RobotExpressive/RobotExpressive.glb',function (gltf) {
+                    let object = gltf.scene;
+                    object.scale.set(10,10,10);
+                    object.position.set(-40,0,20);
+                    object.rotation.set(0,0.4,0);
+                    Playermixer = new THREE.AnimationMixer( object );
+                    console.log(gltf.animations.length);
+                    let walk;
+                    for(let i=0;i<gltf.animations.length;i++){
+                        let clip=gltf.animations[i];
+                        if(clip.name === 'Walking'){
+                            walk=clip;
+                        }
+                    }
+					let action = Playermixer.clipAction( walk );
+					action.play();
+
+					scene.add( object );
+                });
+
+            }
+            function RobotLoad(){
+                let loader = new THREE.GLTFLoader();
+				loader.load( 'Animated Human by @Quaternius/Animated Human.glb',function (gltf) {
+                    let object = gltf.scene;
+                    
+                    object.scale.set(10,10,10);
+                    object.position.set(40,0,20);
+					object.rotation.set(0,-0.4,0);
+                    scene.add( object );
+				});
+            }
+            function animate(){
+                requestAnimationFrame( animate );
+                update();
+                render();
+            }
+            function update(){
+                delta = clock.getDelta();
+                let time = Date.now() * 0.05;
+				Playermixer.update( delta *0.6 );
+            } 
+            function render(){
+                renderer.render( scene, camera );
+            }
+            // for any test
+            let shape,shapeGeometry;
+            function getCube(){
+                shapeGeometry = new THREE.BoxGeometry(30,30,30);
+                shape = new THREE.Mesh(
+                    shapeGeometry,
+                    new THREE.MeshStandardMaterial({color:0xffffff, map:texture2})
+                );
+                shape.position.set(0,20,0);
+                shape.rotateX(-Math.PI/2)
+                scene.add(shape); 
+            }
+        </script>
 </body>
 </html>
