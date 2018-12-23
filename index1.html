@@ -22,7 +22,7 @@
 	<script>
 		var scene = new THREE.Scene();
 
-		var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+		var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 4000);
 		camera.position.z = 500;
 		camera.position.y = 200;
 
@@ -42,7 +42,7 @@
 
 
 		function initSkyBox() {
-			var skyBox = new THREE.BoxGeometry(1000,1000,1000);
+			var skyBox = new THREE.BoxGeometry(4000,1000,3000);
 		
 		var materials = 
 		[
@@ -148,7 +148,7 @@
 			light.shadow.camera.right = d;
 			light.shadow.camera.top = d;
 			light.shadow.camera.bottom = - d;
-			light.shadow.camera.far = 2000;
+			light.shadow.camera.far = 4000;
 			scene.add(light);
 		}
 		function initPitch() {
@@ -160,7 +160,7 @@
 
 			var groundMaterial = new THREE.MeshLambertMaterial({ map: groundTexture });
 
-				var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1000, 1000), groundMaterial);
+				var mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(4000, 3000), groundMaterial);
 			mesh.position.y = - 50;
 			mesh.rotation.x = - Math.PI / 2;
 			mesh.receiveShadow = true;
@@ -168,7 +168,7 @@
 		}
 
 		function initBall() {
-			var sphere = new THREE.SphereGeometry(50, 20, 20);
+			var sphere = new THREE.SphereGeometry(35, 20, 20);
 			var ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
 			var material1 = new THREE.MeshLambertMaterial({ map: ballTexture });
 			var mesh1 = new THREE.Mesh(sphere, material1);
