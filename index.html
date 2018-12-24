@@ -63,6 +63,7 @@
 				controls.maxDistance = 500;
 				controls.maxPolarAngle = (Math.PI / 2)-0.1;
                 
+                
                 lighting();
                 plane();
                 ball();
@@ -84,8 +85,7 @@
                     new THREE.PlaneGeometry( 3000,2000),
                     new THREE.MeshStandardMaterial( { 
                         map:groundTexture,
-                        side:THREE.DoubleSide
-                    })
+                    })  
                 );
                 plane.rotateX(-Math.PI/2);
                 plane.receiveShadow = true;
