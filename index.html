@@ -75,9 +75,9 @@
                 controls = new THREE.OrbitControls( camera, renderer.domElement );
                 controls.addEventListener( 'change', function() { renderer.render(scene, camera); } );
                 controls.staticMoving = true;
-//                controls.minDistance = 100;
-//                controls.maxDistance = 500;
-//                controls.maxPolarAngle = (Math.PI / 2) - 0.1;
+                controls.minDistance = 100;
+                controls.maxDistance = 500;
+                controls.maxPolarAngle = (Math.PI / 2) - 0.1;
 
                 lighting();
                 plane();
