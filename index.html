@@ -74,6 +74,7 @@
 
             lighting();
             plane();
+            transparency();
             ball();
             wall();
             initSky();
@@ -97,8 +98,23 @@
             plane.rotateX(-Math.PI / 2);
             plane.receiveShadow = true;
             plane.castShadow = true;
-
             scene.add(plane);
+        }
+         function transparency(){
+            
+            var geometry = new THREE.PlaneGeometry(200, 200,10,10);
+            geometry.computeLineDistances();
+            
+         var material = new THREE.MeshStandardMaterial( {
+                opacity: 0.5,
+                transparent: true,
+                color:0x0000ff
+            } );
+          
+            
+          var mesh = new THREE.Mesh( geometry, material );
+            mesh.position.z = -100.0;
+            scene.add(mesh);
         }
         function ball() {
             let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
