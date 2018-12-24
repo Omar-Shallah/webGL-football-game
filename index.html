@@ -38,11 +38,10 @@
 			let moveBackward = false;
 			let moveLeft = false;
 			let moveRight = false;
-			let canJump = false;
             
-			let velocity = new THREE.Vector3();
-			let direction = new THREE.Vector3();
-            
+			let playervelocity = new THREE.Vector3();
+			let playerdirection = new THREE.Vector3();
+            let playerrotation = new THREE.Vector3();
             let shape,shapeGeometry;
             
             init();
@@ -81,6 +80,7 @@
 
                 lighting();
                 plane();
+                transparency();
                 ball();
                 wall();
                 initSky();
@@ -109,6 +109,20 @@
                 plane.castShadow = true;
 
                 scene.add( plane );
+            }
+            function transparency(){
+            
+                let geometry = new THREE.BoxGeometry(200, 200,2);
+                geometry.computeLineDistances();
+
+                let  material = new THREE.MeshStandardMaterial( {
+                    opacity: 0.5,
+                    transparent: true,
+                    color:0x0000ff
+                } );
+                let mesh = new THREE.Mesh( geometry, material );
+                mesh.position.z = -100.0;
+                scene.add(mesh);
             }
             function ball() {
                 let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
@@ -303,8 +317,6 @@
 							break;
 
 						case 32: // space
-							if ( canJump === true ) velocity.y += 350;
-							canJump = false;
 							break;
 
 					}
@@ -350,26 +362,31 @@
                 let time = Date.now() * 0.05;
 				Playermixer.update( delta *0.6 );
                 
-                velocity.x -= velocity.x * 10.0 * delta;
-                velocity.z -= velocity.z * 10.0 * delta;
+                playervelocity.x -= playervelocity.x * 10.0 * delta;
+                playervelocity.z -= playervelocity.z * 10.0 * delta;
 
-                velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
 
-                direction.z =  Number( moveBackward ) - Number( moveForward ) ;
-                direction.x =  Number( moveRight - Number( moveLeft ));
-                direction.normalize(); // this ensures consistent movements in all directions
+                playerdirection.z =  Number( moveForward ) - Number( moveBackward );
+                playerdirection.x =  Number( moveLeft ) - Number( moveRight) ;
+                playerdirection.normalize(); // this ensures consistent movements in all directions
 
-                if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
-                if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
+                playerrotation.y = playerdirection.x;
+                if ( moveForward || moveBackward ) playervelocity.z += playerdirection.z * 400.0 * delta;
+                if ( moveLeft || moveRight ) playervelocity.x += playerdirection.x * 400.0 * delta;
+                let x=playerContols.getObject().position.x;
+                let y=playerContols.getObject().position.y;
+                let z=playerContols.getObject().position.z;
+                x = Math.min(1400,Math.max(-1400,x + playervelocity.x * delta));
+                z = Math.min(900 ,Math.max(-900 ,z + playervelocity.z * delta));
+                playerContols.getObject().position.set(x, 0, z);
                 
-                velocity.y = Math.max( 0, velocity.y );
+//                playerContols.getObject().rotateX( playerrotation.x * delta);
+//                playerContols.getObject().rotateY( playerrotation.y * delta);
+//                playerContols.getObject().rotateZ( playerrotation.z * delta);
                 
-                
-                playerContols.getObject().translateX( velocity.x * delta );
-                playerContols.getObject().translateY( velocity.y * delta );
-                playerContols.getObject().translateZ( velocity.z * delta );
                 camera.lookAt(playerContols.getObject().position);
-//                console.log("cc: "+playerContols.getObject().position.x);
+//                console.log("y: "+playerContols.getObject().position.y );
+//                console.log("z: "+playerContols.getObject().position.z );
             } 
             function render(){
                 renderer.render( scene, camera );
