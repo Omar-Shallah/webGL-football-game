@@ -57,7 +57,7 @@
         let moveRight = false;
         let playervelocity = 0;
         let playerangle = 0;
-
+        let action,clip;
         let shape, shapeGeometry;
 
         init();
@@ -96,7 +96,7 @@
             controls.maxPolarAngle = (Math.PI / 2) - 0.1;
             lighting();
             plane();
-            //                transparency();
+            transparency();
             ball();
             wall();
             initSky();
@@ -130,7 +130,7 @@
         function transparency() {
 
             let geometry = new THREE.BoxGeometry(200, 200, 2);
-            geometry.computeLineDistances();
+            //geometry.computeLineDistances();
             let material = new THREE.MeshStandardMaterial({
                 opacity: 0.5,
                 transparent: true,
@@ -264,16 +264,14 @@
                 Playermixer = new THREE.AnimationMixer( object );
                 console.log(gltf.animations.length);
                 let walk;
-                for(let i=0;i<gltf.animations.length;i++){
-                    let clip=gltf.animations[i];
-                    if(clip.name === 'Walking'){
+                for (let i = 0; i < gltf.animations.length; i++) {
+                     clip = gltf.animations[i];
+                    if (clip.name === 'Walking') {
                         console.log("found");
                         walk=clip;
                     }
                 }
-                let action = Playermixer.clipAction( walk );
-                action.play();
-
+                action = Playermixer.clipAction(walk);
                 playerContols = new THREE.PointerLockControls(object );
                 playerContols.getObject().scale.set(15,15,15);
                 playerContols.getObject().position.set(-40,0,20);
@@ -316,6 +314,7 @@
         }
 
         function onKeyDown(event) {
+            action.play();
             switch (event.keyCode) {
                 case keyup: // w
                     moveForward = true;
@@ -342,6 +341,7 @@
         };
 
         function onKeyUp(event) {
+            action.stop();
             switch (event.keyCode) {
                 case keyup: // w
                     moveForward = false;
