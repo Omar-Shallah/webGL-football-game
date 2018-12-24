@@ -3,8 +3,8 @@
 
 <head>
     <meta charset=utf-8>
-    <title>therd test three.js app</title>
-    <style>
+    <title>Football Player</title>
+    <link rel="icon" href="Ball.png">    <style>
         body {
             margin: 0;
         }
@@ -29,8 +29,13 @@
     <!--        <script src="node_modules/three/examples/js/loaders/OBJLoader.js"></script>-->
 
     <script>
-        const playerSpeed = 100.0;
-        const playerRotationSpeed = 1.0;
+        let playerSpeed=100.0;
+        let playerRotationSpeed=1.5;
+        let keyleft="A".charCodeAt(0);
+        let keyright="D".charCodeAt(0);
+        let keyup="W".charCodeAt(0);
+        let keydown="S".charCodeAt(0);
+        let keyspeed="E".charCodeAt(0);
         let scene,
             renderer,
             container,
@@ -38,7 +43,7 @@
             height,
             alpha =0.5,
             i=0;
-        let camera,
+        let camera,camera1,camera2,
             controls,
             soccerball,
             fov, aspect, near, far;
@@ -66,9 +71,14 @@
             near = 1;
             far = 4000;
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            camera.position.set(50, 150, -350);
-            camera.lookAt(new THREE.Vector3(0, 0, 0));
+            camera1 = new THREE.PerspectiveCamera(fov, aspect, near, far);
+            camera1.position.set(0,150,350);
+            camera1.lookAt(new THREE.Vector3(0,0,0));
+            camera2 = new THREE.PerspectiveCamera(fov, aspect, near, far);
+            camera2.position.set(0,100,-850);
+            camera2.lookAt(new THREE.Vector3(0,0,0));
+
+            camera=camera1;
 
             //controls = new THREE.PointerLockControls( camera );
 
@@ -186,7 +196,8 @@
                 luminance: 1,
                 inclination: 0.49, // elevation / inclination
                 azimuth: 0.25, // Facing front,
-                sun: ! true
+                sun: ! true,
+                camera2: ! true
             };
             var distance = 400000;
             function guiChanged() {
@@ -202,7 +213,13 @@
                 sunSphere.position.y = distance * Math.sin(phi) * Math.sin(theta);
                 sunSphere.position.z = distance * Math.sin(phi) * Math.cos(theta);
                 sunSphere.rotation.y += 50;
-                sunSphere.visible = effectController.sun;
+                sunSphere.visible=effectController.sun;
+                if(effectController.camera2){
+                    camera=camera2;
+                }
+                else{
+                    camera=camera1;
+                }
                 uniforms.sunPosition.value.copy(sunSphere.position);
                 renderer.render(scene, camera);
             }
@@ -215,19 +232,25 @@
             gui.add(effectController, "inclination", 0, 1, 0.0001).onChange(guiChanged);
             gui.add(effectController, "azimuth", 0, 1, 0.0001).onChange(guiChanged);
             gui.add(effectController, "sun").onChange(guiChanged);
+            gui.add(effectController, "camera2").onChange(guiChanged);
             guiChanged();
         }
         function lighting() {
             const light = new THREE.DirectionalLight(0xdfebff, 1);
             light.position.set(-400, 1000, -400);
             light.castShadow = true;
-            const d = 200;
+            
+            const d = 500;
             light.shadowCameraLeft = -d;
             light.shadowCameraRight = d;
             light.shadowCameraTop = d;
             light.shadowCameraBottom = -d;
             light.shadowCameraFar = far;
             scene.add(light);
+            
+            light.shadow.mapSize.width = 2048;
+            light.shadow.mapSize.height = 2048;
+            
             scene.add(new THREE.HemisphereLight(0xffffbb, 0x080820, 0.6));
             scene.add(new THREE.AmbientLight(0xa59f75, 0.6));
         }
@@ -236,28 +259,31 @@
             let loader = new THREE.GLTFLoader();
             loader.load('RobotExpressive/RobotExpressive.glb', function (gltf) {
                 let object = gltf.scene;
-                console.log(scene);
-                object.scale.set(10, 10, 10);
-                object.position.set(-40, 0, 20);
-                object.rotation.set(0, 0.4, 0);
-                Playermixer = new THREE.AnimationMixer(object);
+                console.log(gltf);
+
+                Playermixer = new THREE.AnimationMixer( object );
                 console.log(gltf.animations.length);
                 let walk;
-                for (let i = 0; i < gltf.animations.length; i++) {
-                    let clip = gltf.animations[i];
-                    if (clip.name === 'Walking') {
+                for(let i=0;i<gltf.animations.length;i++){
+                    let clip=gltf.animations[i];
+                    if(clip.name === 'Walking'){
                         console.log("found");
-                        walk = clip;
+                        walk=clip;
                     }
                 }
-                let action = Playermixer.clipAction(walk);
+                let action = Playermixer.clipAction( walk );
                 action.play();
-                playerContols = new THREE.PointerLockControls(object.getObjectByName('Root Scene'));
-                scene.add(playerContols.getObject());
-                ready = true;
+
+                playerContols = new THREE.PointerLockControls(object );
+                playerContols.getObject().scale.set(15,15,15);
+                playerContols.getObject().position.set(-40,0,20);
+                playerContols.getObject().rotation.set(0,0.4,0);
+                scene.add( playerContols.getObject() );
+                ready=true;
                 console.log(object);
             });
         }
+        let human;
         function humantLoad() {
             let loader = new THREE.GLTFLoader();
             loader.load('Animated Human by @Quaternius/Animated Human.glb', function (gltf) {
@@ -272,9 +298,9 @@
                         walk = clip;
                     }
                 }
-                object.scale.set(10, 10, 10);
-                object.position.set(40, 0, 20);
-                object.rotation.set(0, -0.4, 0);
+                object.scale.set(15, 15, 15);
+                object.position.set(0, 0, -600);
+                human=object;
                 scene.add(object);
             });
         }
@@ -291,22 +317,25 @@
 
         function onKeyDown(event) {
             switch (event.keyCode) {
-                //						case 38: // up
-                case 87: // w
+                case keyup: // w
                     moveForward = true;
                     break;
-                //						case 37: // left
-                case 65: // a
+
+                case keyleft: // a
                     moveLeft = true;
                     break;
-                //						case 40: // down
-                case 83: // s
+
+                case keydown: // s
                     moveBackward = true;
                     break;
-                //						case 39: // right
-                case 68: // d
+
+                case keyright: // d
                     moveRight = true;
                     break;
+                case keyspeed:
+                    playerSpeed=200.0;
+                    break;
+
                 case 32: // space
                     break;
             }
@@ -314,30 +343,35 @@
 
         function onKeyUp(event) {
             switch (event.keyCode) {
-                //						case 38: // up
-                case 87: // w
+                case keyup: // w
                     moveForward = false;
                     break;
-                //						case 37: // left
-                case 65: // a
+
+//						case 37: // left
+                case keyleft: // a
                     moveLeft = false;
                     break;
-                //						case 40: // down
-                case 83: // s
+
+//						case 40: // down
+                case keydown: // s
                     moveBackward = false;
                     break;
-                //						case 39: // right
-                case 68: // d
+
+//						case 39: // right
+                case keyright: // d
                     moveRight = false;
+                    break;
+                case keyspeed:
+                    playerSpeed=100.0;
+                    break;
+
+                case 32: // space
                     break;
             }
         };
         function onMouseDown(event) {
             event.preventDefault();
             mouseDown = true;
-
-
-
         }
         function onMouseUp(event) {
             // var time = new Date.now();
@@ -346,7 +380,9 @@
             mouseDown = false;
 
         }
-
+        function addbetween(before,change,min,max){
+            return Math.min(max ,Math.max(min ,before + change));
+        }
 
         function animate() {
             requestAnimationFrame(animate);
@@ -356,33 +392,29 @@
             }
         }
         function update() {
-            delta = clock.getDelta();
-            Playermixer.update(delta);
+            delta = clock.getDelta() ;
+            Playermixer.update( delta );
 
             playervelocity = 0;
 
-            let playerdirection = new THREE.Vector3();
-            playerdirection.x = Number(moveLeft) - Number(moveRight);
-            playerdirection.z = Number(moveForward) - Number(moveBackward);
-            playerdirection.normalize(); // this ensures consistent movements in all directions
-            let sign = playerdirection.x;
-            playerangle += sign * playerRotationSpeed * delta;
+            let rotationsign = Number( moveLeft ) - Number( moveRight) ;
+            let directionsign =  Number( moveForward ) - Number( moveBackward );
 
-            if (moveForward || moveBackward) playervelocity += playerdirection.z * playerSpeed * delta;
-            //                if ( moveLeft || moveRight ) playervelocity.x += playerdirection.x * 400.0 * delta;
+            playerangle += rotationsign * playerRotationSpeed * delta;
 
-            let x = playerContols.getObject().position.x;
-            let y = playerContols.getObject().position.y;
-            let z = playerContols.getObject().position.z;
-            //                console.log(playervelocity);
-            x = Math.min(1400, Math.max(-1400, x + playervelocity * Math.sin(playerangle)));
-            z = Math.min(900, Math.max(-900, z + playervelocity * Math.cos(playerangle)));
-            playerContols.getObject().position.set(x, y, z);
+            if ( moveForward || moveBackward ) {
+                playervelocity += directionsign * playerSpeed * delta;
+            }
 
-            playerContols.getObject().rotation.y = (playerangle);
+            playerContols.getObject().position.x=addbetween(playerContols.getObject().position.x,playervelocity * Math.sin(playerangle),-1400,1400 );
+            playerContols.getObject().position.z=addbetween(playerContols.getObject().position.z,playervelocity * Math.cos(playerangle),-800,800 );
+
+            playerContols.getObject().rotation.y = ( playerangle );
 
             camera.lookAt(playerContols.getObject().position);
-
+            human.lookAt(playerContols.getObject().position);
+//            human.lookAt()
+//            console.log(human);
 
             if (mouseDown) {
                 i += 3;
@@ -391,8 +423,8 @@
             if (!mouseDown) {
 
 
-                soccerball.position.x = i;
-                soccerball.position.y = (10 * Math.sqrt(soccerball.position.x) / Math.sqrt(Math.cos(2 * alpha)) + soccerball.position.x * Math.tan(alpha)) * 0.1;
+                soccerball.position.x = 0;
+                soccerball.position.y =10;// (10 * Math.sqrt(soccerball.position.x) / Math.sqrt(Math.cos(2 * alpha)) + soccerball.position.x * Math.tan(alpha)) * 0.1;
             }
 
 
