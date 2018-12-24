@@ -22,6 +22,8 @@
 <!--        <script src="node_modules/three/examples/js/loaders/OBJLoader.js"></script>-->
 
         <script>
+            const playerSpeed=100.0;
+            const playerRotationSpeed=1.0;
             let scene,
                 renderer,
                 container,
@@ -38,10 +40,9 @@
 			let moveBackward = false;
 			let moveLeft = false;
 			let moveRight = false;
+            let playervelocity=0;
+            let playerangle=0;
             
-			let playervelocity = new THREE.Vector3();
-			let playerdirection = new THREE.Vector3();
-            let playerrotation = new THREE.Vector3();
             let shape,shapeGeometry;
             
             init();
@@ -80,7 +81,7 @@
 
                 lighting();
                 plane();
-                transparency();
+//                transparency();
                 ball();
                 wall();
                 initSky();
@@ -358,35 +359,33 @@
                 }
             }
             function update(){
-                delta = clock.getDelta() *2;
-                let time = Date.now() * 0.05;
-				Playermixer.update( delta *0.6 );
+                delta = clock.getDelta() ;
+				Playermixer.update( delta );
                 
-                playervelocity.x -= playervelocity.x * 10.0 * delta;
-                playervelocity.z -= playervelocity.z * 10.0 * delta;
-
-
+                playervelocity = 0;
+                
+                let playerdirection=new THREE.Vector3();
+                playerdirection.x= Number( moveLeft ) - Number( moveRight) ;
                 playerdirection.z =  Number( moveForward ) - Number( moveBackward );
-                playerdirection.x =  Number( moveLeft ) - Number( moveRight) ;
                 playerdirection.normalize(); // this ensures consistent movements in all directions
+                let sign = playerdirection.x ;
 
-                playerrotation.y = playerdirection.x;
-                if ( moveForward || moveBackward ) playervelocity.z += playerdirection.z * 400.0 * delta;
-                if ( moveLeft || moveRight ) playervelocity.x += playerdirection.x * 400.0 * delta;
+                playerangle += sign * playerRotationSpeed * delta;
+                
+                if ( moveForward || moveBackward ) playervelocity += playerdirection.z * playerSpeed * delta;
+//                if ( moveLeft || moveRight ) playervelocity.x += playerdirection.x * 400.0 * delta;
+                
                 let x=playerContols.getObject().position.x;
                 let y=playerContols.getObject().position.y;
                 let z=playerContols.getObject().position.z;
-                x = Math.min(1400,Math.max(-1400,x + playervelocity.x * delta));
-                z = Math.min(900 ,Math.max(-900 ,z + playervelocity.z * delta));
-                playerContols.getObject().position.set(x, 0, z);
+//                console.log(playervelocity);
+                x = Math.min(1400,Math.max(-1400,x + playervelocity * Math.sin(playerangle)) );
+                z = Math.min(900 ,Math.max(-900 ,z + playervelocity * Math.cos(playerangle)) );
+                playerContols.getObject().position.set(x, y, z);
                 
-//                playerContols.getObject().rotateX( playerrotation.x * delta);
-//                playerContols.getObject().rotateY( playerrotation.y * delta);
-//                playerContols.getObject().rotateZ( playerrotation.z * delta);
+                playerContols.getObject().rotation.y =( playerangle );
                 
                 camera.lookAt(playerContols.getObject().position);
-//                console.log("y: "+playerContols.getObject().position.y );
-//                console.log("z: "+playerContols.getObject().position.z );
             } 
             function render(){
                 renderer.render( scene, camera );
