@@ -79,9 +79,6 @@
             initSky();
             humantLoad();
             robotLoad();
-
-            camera.lookAt(sphere);
-
             window.addEventListener('resize', onWindowResize, false);
             clock = new THREE.Clock();
         }
@@ -217,8 +214,6 @@
                 let object = gltf.scene;
 
                 object.scale.set(10, 10, 10);
-                object.position.set(-40, 0, 20);
-                object.rotation.set(0, 0.4, 0);
                 Playermixer = new THREE.AnimationMixer(object);
                 console.log(gltf.animations.length);
                 let walk;
@@ -235,25 +230,26 @@
                 scene.add(object);
                 ready = true;
                 console.log(object);
-            //      var xSpeed = 5;
-            //     var ySpeed = 5;
+                 var xSpeed = 1;
+                var ySpeed = 1;
 
-            // document.addEventListener("keydown", onDocumentKeyDown);
-            // function onDocumentKeyDown(event) {
-            //     var keyCode = event.which;
-            //     if (keyCode == 87) {
-            //         object.position.z += ySpeed;
-            //     } else if (keyCode == 83) {
-            //         object.position.z -= ySpeed;
-            //     } else if (keyCode == 65) {
-            //         object.position.x += xSpeed;
-            //     } else if (keyCode == 68) {
-            //         object.position.x -= xSpeed;
-            //     } else if (keyCode == 32) {
-            //         object.position.set(0, 0, 0);
-            //     }
-            //     renderer.render(scene, camera);
-            // };
+            document.addEventListener("keydown", onDocumentKeyDown);
+            function onDocumentKeyDown(event) {
+                var keyCode = event.which;
+                action.play();
+                if (keyCode == 87) {
+                    object.position.z += ySpeed;
+                } else if (keyCode == 83) {
+                    object.position.z -= ySpeed;
+                } else if (keyCode == 65) {
+                    object.position.x += xSpeed;
+                } else if (keyCode == 68) {
+                    object.position.x -= xSpeed;
+                } else if (keyCode == 32) {
+                    object.position.set(0, 0, 0);
+                }
+                render();
+            };
             });
 
         }
