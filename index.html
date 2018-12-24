@@ -1,290 +1,320 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset=utf-8>
-        <title>Football Player</title>
-        <link rel="icon" href="Ball.png">
-        <style>
-			body { margin: 0; }
-			canvas { width: 100%; height: 100% }
-        </style>
-        
-    </head>
-    
-    <body>
-        <div id="scene"></div>
 
-        <script src="node_modules/three/build/three.js"></script>
-		<script src="node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
-        <script src="node_modules/three/examples/js/controls/OrbitControls.js"></script>
-        <script src="node_modules/three/examples/js/objects/Sky.js"></script>
-        <script src="node_modules/three/examples/js/libs/dat.gui.min.js"></script>
-<!--        <script src="node_modules/three/examples/js/loaders/OBJLoader.js"></script>-->
+<head>
+    <meta charset=utf-8>
+    <title>Football Player</title>
+    <link rel="icon" href="Ball.png">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
 
-        <script>
-            let scene,
-                renderer,
-                container,
-                width,
-                height;
-            let camera,
-                controls,
-                fov, aspect, near, far;
-            let Playermixer,clock,ready=false;
-            init();
-            
-            animate();
-            function init(){
-                width = window.innerWidth;
-                height = window.innerHeight;
+        canvas {
+            width: 100%;
+            height: 100%
+        }
+    </style>
 
-                fov = 50;
-                aspect = width / height;
-                near = 1;
-                far = 4000;
+</head>
 
-                scene = new THREE.Scene();
+<body>
+    <div id="scene"></div>
 
-                camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-                camera.position.set(50,150,350);
-                camera.lookAt(new THREE.Vector3(0,0,0));
+    <script src="node_modules/three/build/three.js"></script>
+    <script src="node_modules/three/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="node_modules/three/examples/js/controls/OrbitControls.js"></script>
+    <script src="node_modules/three/examples/js/objects/Sky.js"></script>
+    <script src="node_modules/three/examples/js/libs/dat.gui.min.js"></script>
+    <!--        <script src="node_modules/three/examples/js/loaders/OBJLoader.js"></script>-->
 
-                renderer = new THREE.WebGLRenderer({ antialias: true });
-                renderer.setSize(width,height);
-                renderer.setClearColor( 0xfff6e6 );
+    <script>
+        let scene,
+            renderer,
+            container,
+            width,
+            height;
+        let camera,
+            controls,
+            fov, aspect, near, far;
+        let Playermixer, clock, ready = false;
+        init();
 
-                container = document.getElementById('scene');
-                container.appendChild(renderer.domElement);
-                
-                controls = new THREE.OrbitControls( camera, renderer.domElement );
-                controls.addEventListener( 'change', function() { renderer.render(scene, camera); } );
-                controls.staticMoving = true;  
-				controls.minDistance = 100;
-				controls.maxDistance = 500;
-				controls.maxPolarAngle = (Math.PI / 2)-0.1;
-                
-                
-                lighting();
-                plane();
-                ball();
-                wall();
-                initSky();
-                humantLoad();
-                robotLoad();
-                
-                window.addEventListener( 'resize', onWindowResize, false );
-                clock= new THREE.Clock();
-            }
-            function plane(){
-                // A mesh is created from the geometry and material, then added to the scene
-                let groundTexture = new THREE.TextureLoader().load('img/grasslight-big.jpg');
-                groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
-                groundTexture.repeat.set(25, 25);
-                groundTexture.anisotropy = 16;
-                let plane = new THREE.Mesh(
-                    new THREE.PlaneGeometry( 3000,2000),
-                    new THREE.MeshStandardMaterial( { 
-                        map:groundTexture,
-                    })  
-                );
-                plane.rotateX(-Math.PI/2);
-                plane.receiveShadow = true;
-                plane.castShadow = true;
+        animate();
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
 
-                scene.add( plane );
-            }
-            function ball() {
-                let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
-                
-                let sphere = new THREE.SphereGeometry(10, 10, 36);
-                let material1 = new THREE.MeshLambertMaterial({ map: ballTexture });
-                
-                let ball = new THREE.Mesh(sphere, material1);
-                ball.receiveShadow = true;
-                ball.castShadow = true;
-                ball.position.y += 50;
-                ball.position.z += 200;
-                ball.position.set(0,15,100);
-                
-                renderer.shadowMap.enabled = true;
-                scene.add(ball);
-            }
-            function wall(){
-                let skyBox = new THREE.BoxGeometry(2000,1000,2000);
-                let materials = 
+            fov = 50;
+            aspect = width / height;
+            near = 1;
+            far = 4000;
+
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+            camera.position.set(50, 150, 350);
+            camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(width, height);
+            renderer.setClearColor(0xfff6e6);
+
+            container = document.getElementById('scene');
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.addEventListener('change', function () { renderer.render(scene, camera); });
+            controls.staticMoving = true;
+            controls.minDistance = 100;
+            controls.maxDistance = 500;
+            controls.maxPolarAngle = (Math.PI / 2) - 0.1;
+
+
+            lighting();
+            plane();
+            ball();
+            wall();
+            initSky();
+            humantLoad();
+            robotLoad();
+
+            camera.lookAt(sphere);
+
+            window.addEventListener('resize', onWindowResize, false);
+            clock = new THREE.Clock();
+        }
+        function plane() {
+            // A mesh is created from the geometry and material, then added to the scene
+            let groundTexture = new THREE.TextureLoader().load('img/grasslight-big.jpg');
+            groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
+            groundTexture.repeat.set(25, 25);
+            groundTexture.anisotropy = 16;
+            let plane = new THREE.Mesh(
+                new THREE.PlaneGeometry(3000, 3000),
+                new THREE.MeshStandardMaterial({
+                    map: groundTexture,
+                })
+            );
+            plane.rotateX(-Math.PI / 2);
+            plane.receiveShadow = true;
+            plane.castShadow = true;
+
+            scene.add(plane);
+        }
+        function ball() {
+            let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
+
+            let sphere = new THREE.SphereGeometry(10, 10, 36);
+            let material1 = new THREE.MeshLambertMaterial({ map: ballTexture });
+
+            let ball = new THREE.Mesh(sphere, material1);
+            ball.receiveShadow = true;
+            ball.castShadow = true;
+            ball.position.y += 50;
+            ball.position.z += 200;
+            ball.position.set(0, 15, 100);
+
+            renderer.shadowMap.enabled = true;
+            scene.add(ball);
+        }
+        function wall() {
+            let skyBox = new THREE.BoxGeometry(3000, 2000, 2000);
+            let materials =
                 [
-                    new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load('img/wall/4.png') ,side :THREE.DoubleSide}),
-                    new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load('img/wall/2.png') ,side :THREE.DoubleSide}),
-                    new THREE.MeshBasicMaterial( { transparent: true, opacity: 0, wireframe: true, side: THREE.DoubleSide} ),
-                    new THREE.MeshBasicMaterial( { transparent: true, opacity: 0, wireframe: true, side: THREE.DoubleSide} ),
-                    new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load('img/wall/3.png') ,side :THREE.DoubleSide}),
-                    new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load('img/wall/1.png') ,side :THREE.DoubleSide}),
-//                    new THREE.MeshBasicMaterial( { transparent: true, opacity: 0, wireframe: true, side: THREE.DoubleSide} ),
+                    new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('img/wall/4.png'), side: THREE.DoubleSide }),
+                    new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('img/wall/2.png'), side: THREE.DoubleSide }),
+                    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, wireframe: true, side: THREE.DoubleSide }),
+                    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, wireframe: true, side: THREE.DoubleSide }),
+                    new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('img/wall/3.png'), side: THREE.DoubleSide }),
+                    new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('img/wall/1.png'), side: THREE.DoubleSide }),
+                    //                    new THREE.MeshBasicMaterial( { transparent: true, opacity: 0, wireframe: true, side: THREE.DoubleSide} ),
                 ]
-                let faceMaterial = new THREE.MeshFaceMaterial(materials);
-                let skyBoxMesh = new THREE.Mesh(skyBox , faceMaterial);
-                skyBoxMesh.position.y = 400;
-                scene.add(skyBoxMesh);
+            let faceMaterial = new THREE.MeshFaceMaterial(materials);
+            let skyBoxMesh = new THREE.Mesh(skyBox, faceMaterial);
+            skyBoxMesh.position.y = 1000;
+            scene.add(skyBoxMesh);
+        }
+        function initSky() {
+            // Add Sky
+            sky = new THREE.Sky();
+            sky.scale.setScalar(450000);
+            sky.position.z = -100;
+            scene.add(sky);
+            // Add Sun Helper
+            sunSphere = new THREE.Mesh(
+                new THREE.SphereBufferGeometry(20000, 16, 8),
+                new THREE.MeshBasicMaterial({ color: 0xffffff })
+            );
+            sunSphere.position.y = - 700000;
+            sunSphere.visible = true;
+            scene.add(sunSphere);
+            /// GUI
+            var effectController = {
+                turbidity: 10,
+                rayleigh: 2,
+                mieCoefficient: 0.005,
+                mieDirectionalG: 0.8,
+                luminance: 1,
+                inclination: 0.49, // elevation / inclination
+                azimuth: 0.25, // Facing front,
+                sun: ! true
+            };
+            var distance = 400000;
+            function guiChanged() {
+                var uniforms = sky.material.uniforms;
+                uniforms.turbidity.value = effectController.turbidity;
+                uniforms.rayleigh.value = effectController.rayleigh;
+                uniforms.luminance.value = effectController.luminance;
+                uniforms.mieCoefficient.value = effectController.mieCoefficient;
+                uniforms.mieDirectionalG.value = effectController.mieDirectionalG;
+                var theta = Math.PI * (effectController.inclination - 0.5);
+                var phi = 2 * Math.PI * (effectController.azimuth - 0.5);
+                sunSphere.position.x = distance * Math.cos(phi);
+                sunSphere.position.y = distance * Math.sin(phi) * Math.sin(theta);
+                sunSphere.position.z = distance * Math.sin(phi) * Math.cos(theta);
+                sunSphere.rotation.y += 50;
+                sunSphere.visible = effectController.sun;
+                uniforms.sunPosition.value.copy(sunSphere.position);
+
+
+                renderer.render(scene, camera);
+
+
             }
-            function initSky() {
-                // Add Sky
-                sky = new THREE.Sky();
-                sky.scale.setScalar(450000);
-                sky.position.z = -100;
-                scene.add(sky);
-                // Add Sun Helper
-                sunSphere = new THREE.Mesh(
-                    new THREE.SphereBufferGeometry(20000, 16, 8),
-                    new THREE.MeshBasicMaterial({ color: 0xffffff })
-                );
-                sunSphere.position.y = - 700000;
-                sunSphere.visible = true;
-                scene.add(sunSphere);
-                /// GUI
-                var effectController = {
-                    turbidity: 10,
-                    rayleigh: 2,
-                    mieCoefficient: 0.005,
-                    mieDirectionalG: 0.8,
-                    luminance: 1,
-                    inclination: 0.49, // elevation / inclination
-                    azimuth: 0.25, // Facing front,
-                    sun: ! true
-                };
-                var distance = 400000;
-                function guiChanged() {
-                    var uniforms = sky.material.uniforms;
-                    uniforms.turbidity.value = effectController.turbidity;
-                    uniforms.rayleigh.value = effectController.rayleigh;
-                    uniforms.luminance.value = effectController.luminance;
-                    uniforms.mieCoefficient.value = effectController.mieCoefficient;
-                    uniforms.mieDirectionalG.value = effectController.mieDirectionalG;
-                    var theta = Math.PI * (effectController.inclination - 0.5);
-                    var phi = 2 * Math.PI * (effectController.azimuth - 0.5);
-                    sunSphere.position.x = distance * Math.cos(phi);
-                    sunSphere.position.y = distance * Math.sin(phi) * Math.sin(theta);
-                    sunSphere.position.z = distance * Math.sin(phi) * Math.cos(theta);
-                    sunSphere.rotation.y += 50;
-                    sunSphere.visible = effectController.sun;
-                    uniforms.sunPosition.value.copy(sunSphere.position);
+            var gui = new dat.GUI();
+            gui.add(effectController, "turbidity", 1.0, 20.0, 0.1).onChange(guiChanged);
+            gui.add(effectController, "rayleigh", 0.0, 4, 0.001).onChange(guiChanged);
+            gui.add(effectController, "mieCoefficient", 0.0, 0.1, 0.001).onChange(guiChanged);
+            gui.add(effectController, "mieDirectionalG", 0.0, 1, 0.001).onChange(guiChanged);
+            gui.add(effectController, "luminance", 0.0, 2).onChange(guiChanged);
+            gui.add(effectController, "inclination", 0, 1, 0.0001).onChange(guiChanged);
+            gui.add(effectController, "azimuth", 0, 1, 0.0001).onChange(guiChanged);
+            gui.add(effectController, "sun").onChange(guiChanged);
+            guiChanged();
+        }
+        function lighting() {
+            const light = new THREE.DirectionalLight(0xdfebff, 1);
+            light.position.set(-400, 1000, -400);
+            light.castShadow = true;
 
+            const d = 200;
+            light.shadowCameraLeft = -d;
+            light.shadowCameraRight = d;
+            light.shadowCameraTop = d;
+            light.shadowCameraBottom = -d;
 
-                    renderer.render(scene, camera);
+            light.shadowCameraFar = far;
 
+            scene.add(light);
+            scene.add(new THREE.HemisphereLight(0xffffbb, 0x080820, 0.6));
+            scene.add(new THREE.AmbientLight(0xa59f75, 0.6));
+        }
+        function robotLoad() {
+            let loader = new THREE.GLTFLoader();
+            loader.load('RobotExpressive/RobotExpressive.glb', function (gltf) {
+                let object = gltf.scene;
 
-                }
-                var gui = new dat.GUI();
-                gui.add(effectController, "turbidity", 1.0, 20.0, 0.1).onChange(guiChanged);
-                gui.add(effectController, "rayleigh", 0.0, 4, 0.001).onChange(guiChanged);
-                gui.add(effectController, "mieCoefficient", 0.0, 0.1, 0.001).onChange(guiChanged);
-                gui.add(effectController, "mieDirectionalG", 0.0, 1, 0.001).onChange(guiChanged);
-                gui.add(effectController, "luminance", 0.0, 2).onChange(guiChanged);
-                gui.add(effectController, "inclination", 0, 1, 0.0001).onChange(guiChanged);
-                gui.add(effectController, "azimuth", 0, 1, 0.0001).onChange(guiChanged);
-                gui.add(effectController, "sun").onChange(guiChanged);
-                guiChanged();
-		    }
-            function lighting() {
-              const light = new THREE.DirectionalLight( 0xdfebff, 1);
-              light.position.set( -400, 1000, -400 );
-              light.castShadow = true;
-
-              const d = 200;
-              light.shadowCameraLeft = -d;
-              light.shadowCameraRight = d;
-              light.shadowCameraTop = d;
-              light.shadowCameraBottom = -d;
-
-              light.shadowCameraFar = far;
-
-              scene.add( light );
-              scene.add( new THREE.HemisphereLight( 0xffffbb, 0x080820, 0.6 ) );
-              scene.add( new THREE.AmbientLight(0xa59f75, 0.6) );
-            }
-            function robotLoad(){
-                let loader = new THREE.GLTFLoader();
-				loader.load( 'RobotExpressive/RobotExpressive.glb',function (gltf) {
-                    let object = gltf.scene;
-
-                    object.scale.set(10,10,10);
-                    object.position.set(-40,0,20);
-                    object.rotation.set(0,0.4,0);
-                    Playermixer = new THREE.AnimationMixer( object );
-                    console.log(gltf.animations.length);
-                    let walk;
-                    for(let i=0;i<gltf.animations.length;i++){
-                        let clip=gltf.animations[i];
-						if(clip.name === 'Walking'){
-                            console.log("found");
-                            walk=clip;
-                        }
+                object.scale.set(10, 10, 10);
+                object.position.set(-40, 0, 20);
+                object.rotation.set(0, 0.4, 0);
+                Playermixer = new THREE.AnimationMixer(object);
+                console.log(gltf.animations.length);
+                let walk;
+                for (let i = 0; i < gltf.animations.length; i++) {
+                    let clip = gltf.animations[i];
+                    if (clip.name === 'Walking') {
+                        console.log("found");
+                        walk = clip;
                     }
-					let action = Playermixer.clipAction( walk );
-					action.play();
-
-					scene.add( object );
-                    ready=true;
-                    console.log(object);
-                });
-
-            }
-            function humantLoad(){
-                let loader = new THREE.GLTFLoader();
-				loader.load( 'Animated Human by @Quaternius/Animated Human.glb',function (gltf) {
-                    let object = gltf.scene;
-                    let walk;
-                    console.log(gltf.animations.length);
-                    for(let i=0;i<gltf.animations.length;i++){
-                        let clip=gltf.animations[i];
-                        console.log(clip.name);
-						if(clip.name === 'Walking'){
-                            console.log("found");
-                            walk=clip;
-                        }
-                    }
-                    object.scale.set(10,10,10);
-                    object.position.set(40,0,20);
-					object.rotation.set(0,-0.4,0);
-                    scene.add( object );
-				});
-            }
-            
-            function onWindowResize() {
-				width = window.innerWidth;
-				height = window.innerHeight;
-                aspect=width/height;
-				
-                renderer.setSize( width, height );
-				camera.aspect = aspect;
-				camera.updateProjectionMatrix();
-			}
-            function animate(){
-                requestAnimationFrame( animate );
-                if(ready){
-                    update();
-                    render();
                 }
+                let action = Playermixer.clipAction(walk);
+                action.play();
+
+                scene.add(object);
+                ready = true;
+                console.log(object);
+            //      var xSpeed = 5;
+            //     var ySpeed = 5;
+
+            // document.addEventListener("keydown", onDocumentKeyDown);
+            // function onDocumentKeyDown(event) {
+            //     var keyCode = event.which;
+            //     if (keyCode == 87) {
+            //         object.position.z += ySpeed;
+            //     } else if (keyCode == 83) {
+            //         object.position.z -= ySpeed;
+            //     } else if (keyCode == 65) {
+            //         object.position.x += xSpeed;
+            //     } else if (keyCode == 68) {
+            //         object.position.x -= xSpeed;
+            //     } else if (keyCode == 32) {
+            //         object.position.set(0, 0, 0);
+            //     }
+            //     renderer.render(scene, camera);
+            // };
+            });
+
+        }
+        function humantLoad() {
+            let loader = new THREE.GLTFLoader();
+            loader.load('Animated Human by @Quaternius/Animated Human.glb', function (gltf) {
+                let object = gltf.scene;
+                let walk;
+                console.log(gltf.animations.length);
+                for (let i = 0; i < gltf.animations.length; i++) {
+                    let clip = gltf.animations[i];
+                    console.log(clip.name);
+                    if (clip.name === 'Walking') {
+                        console.log("found");
+                        walk = clip;
+                    }
+                }
+                object.scale.set(10, 10, 10);
+                object.position.set(40, 0, 20);
+                object.rotation.set(0, -0.4, 0);
+                scene.add(object);
+            });
+        }
+
+        function onWindowResize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            aspect = width / height;
+
+            renderer.setSize(width, height);
+            camera.aspect = aspect;
+            camera.updateProjectionMatrix();
+        }
+        function animate() {
+            requestAnimationFrame(animate);
+            if (ready) {
+                update();
+                render();
             }
-            function update(){
-                delta = clock.getDelta();
-                let time = Date.now() * 0.05;
-				Playermixer.update( delta *0.6 );
-            } 
-            function render(){
-                renderer.render( scene, camera );
-            }
-            // for any test
-            let shape,shapeGeometry;
-            function getCube(){
-                shapeGeometry = new THREE.BoxGeometry(30,30,30);
-                shape = new THREE.Mesh(
-                    shapeGeometry,
-                    new THREE.MeshStandardMaterial({color:0xffffff, map:texture2})
-                );
-                shape.position.set(0,20,0);
-                shape.rotateX(-Math.PI/2)
-                scene.add(shape); 
-            }
-        </script>
-    </body>
+        }
+        function update() {
+            delta = clock.getDelta();
+            let time = Date.now() * 0.05;
+            Playermixer.update(delta * 0.6);
+        }
+        function render() {
+            renderer.render(scene, camera);
+        }
+        // for any test
+        let shape, shapeGeometry;
+        function getCube() {
+            shapeGeometry = new THREE.BoxGeometry(30, 30, 30);
+            shape = new THREE.Mesh(
+                shapeGeometry,
+                new THREE.MeshStandardMaterial({ color: 0xffffff, map: texture2 })
+            );
+            shape.position.set(0, 20, 0);
+            shape.rotateX(-Math.PI / 2)
+            scene.add(shape);
+        }
+    </script>
+</body>
+
 </html>
