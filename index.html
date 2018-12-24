@@ -244,14 +244,13 @@
                 console.log(gltf.animations.length);
                 let walk;
                 for (let i = 0; i < gltf.animations.length; i++) {
-                    let clip = gltf.animations[i];
+                     clip = gltf.animations[i];
                     if (clip.name === 'Walking') {
                         console.log("found");
                         walk = clip;
                     }
                 }
-                let action = Playermixer.clipAction(walk);
-                action.play();
+                action = Playermixer.clipAction(walk);
                 playerContols = new THREE.PointerLockControls(object.getObjectByName('Root Scene'));
                 scene.add(playerContols.getObject());
                 ready = true;
@@ -290,6 +289,7 @@
         }
 
         function onKeyDown(event) {
+            action.play();
             switch (event.keyCode) {
                 //						case 38: // up
                 case 87: // w
@@ -313,6 +313,7 @@
         };
 
         function onKeyUp(event) {
+            action.stop();
             switch (event.keyCode) {
                 //						case 38: // up
                 case 87: // w
