@@ -50,82 +50,145 @@
 
         let raycaster;
         let shape, shapeGeometry;
-        let player,playercontrols,playeraction;
+        let player;
         let supervisor;
         let Robot = function(){
+            let model = this;
             this.Speed=100.0;
             this.RotationSpeed=1.5;
             this.moveForward = false;
             this.moveBackward = false;
             this.moveLeft = false;
             this.moveRight = false;
-            this.velocity = 0;
-            this.angle = 0;
+            this.angle=0;
+            // x,z:movin velocity
+            // y: angle velocity
+            this.velocity = new THREE.Vector3();
+            
+            this.object = null;
+            this.action=null;
             let loader = new THREE.GLTFLoader();            
             loader.load('RobotExpressive/RobotExpressive.glb', function (gltf) {
                 gltf.scene.traverse( function( node ) {
                  if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
                 } );
-                let object = gltf.scene;
+                model.object = gltf.scene.children[0];
                 console.log(gltf);
 
-                Playermixer = new THREE.AnimationMixer( object );
-                console.log(gltf.animations.length);
+                Playermixer = new THREE.AnimationMixer( model.object );
                 let walk;
                 for (let i = 0; i < gltf.animations.length; i++) {
                      clip = gltf.animations[i];
                     if (clip.name === 'Walking') {
-                        console.log("found");
                         walk=clip;
                     }
                 }
-                playeraction = Playermixer.clipAction(walk);
-                playercontrols = new THREE.PointerLockControls(object );
-                playercontrols.getObject().scale.set(15,15,15);
-                playercontrols.getObject().position.set(-40,0,20);
-                playercontrols.getObject().rotation.set(0,0.4,0);
-                scene.add( playercontrols.getObject() );
+                model.action = Playermixer.clipAction(walk);
+                model.object.scale.set(15,15,15);
+                model.object.position.set(-40,0,20);
+                model.object.rotation.set(0,0.4,0);
+                scene.add( model.object );
                 ready=true;
-                console.log(scene);
             });
-            this.playercontrols=playercontrols;
-            this.playeraction=playeraction;
         }
         let human=function(){
+            let model=this;
             this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
             this.camera.position.set(0,100,-950);
             this.camera.lookAt(new THREE.Vector3(0,0,0));
             this.cameraangle = 0;
             this.RotationSpeed=1;
             let loader = new THREE.GLTFLoader();
-            loader.load('Animated Human by @Quaternius/Animated Human.glb', function (gltf) {
+            this.object=null;
+            function loadmodel(gltf){
                 gltf.scene.traverse( function( node ) {
-                 if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
+                    if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
                 } );
-                let object = gltf.scene.children[0].children[0];
-                object.material=new THREE.MeshPhongMaterial({color:0x525252})
-                object.scale.set(15, 15, 15);
-                object.position.set(0, 0, -850);
-                human=object;
-                scene.add(object);
-                console.log(gltf);
-            });   
+                model.object = gltf.scene.children[0].children[0];
+                model.object.material=new THREE.MeshPhongMaterial({color:0x525252})
+                model.object.scale.set(15, 15, 15);
+                model.object.position.set(0, 0, -850);
+                scene.add(model.object);
+            }
+            loader.load('Animated Human by @Quaternius/Animated Human.glb',loadmodel);   
         }
         let directlight = function(x,y,z){
-            this.light = new THREE.DirectionalLight(0xcfcbcf, 1);
-            this.light.castShadow = true;
+            this.object = new THREE.DirectionalLight(0xcfcbcf, 1);
+            this.object.castShadow = true;
             const d = 1500;
-            this.light.shadowCameraLeft = -d;
-            this.light.shadowCameraRight = d;
-            this.light.shadowCameraTop = d;
-            this.light.shadowCameraBottom = -d;
-            this.light.shadowCameraFar = far;
+            this.object.shadow.camera.Left = -d;
+            this.object.shadow.camera.Right = d;
+            this.object.shadow.camera.Top = d;
+            this.object.shadow.camera.Bottom = -d;
+            this.object.shadow.camera.Far = far;
             
-            this.light.shadow.mapSize.width = 1024;
-            this.light.shadow.mapSize.height = 1024;
-            this.light.position.set(x,y,z);
+            this.object.shadow.mapSize.width = 1024;
+            this.object.shadow.mapSize.height = 1024;
+            this.object.position.set(x,y,z);
 
-            scene.add(this.light);            
+            scene.add(this.object);            
+        }
+        let Plane = function(x,y){
+            // A mesh is created from the geometry and material, then added to the scene
+            this.groundTexture = new THREE.TextureLoader().load('img/grasslight-big.jpg');
+            this.groundTexture.wrapS = this.groundTexture.wrapT = THREE.RepeatWrapping;
+            this.groundTexture.repeat.set(32, 32);
+            this.groundTexture.anisotropy = 16;
+            this.object = new THREE.Mesh(
+                new THREE.PlaneGeometry(x,y),
+                new THREE.MeshPhongMaterial({
+                    map: this.groundTexture,
+                })
+            );
+            this.object.rotateX(-Math.PI / 2);
+            this.object.receiveShadow = true;
+            this.object.castShadow = true;
+        }
+        let Wall = function(x,y,z){
+            this.Geometry = new THREE.BoxGeometry(x,y,z);
+            let texture = new THREE.TextureLoader().load('img/footballwall.jpg');
+            let material1 = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }); 
+            let material2 = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0}); 
+            this.Material =
+                [
+                    material1,// left
+                    material1,// right
+                    material2,// top
+                    material2,// bootom
+                    material1,// front
+                    material1 // back
+                ]
+            this.object = new THREE.Mesh(this.Geometry,this.Material);
+            this.object.receiveShadow = true;
+            this.object.position.y = y/2;
+        }
+        let Fence = function(x,y,z){
+            this.Geometry = new THREE.BoxGeometry(x,y,z);
+            this.Material = new THREE.MeshStandardMaterial({
+                opacity: 0.5,
+                transparent: true,
+                color: 0x2020af
+            });
+            this.object = new THREE.Mesh(this.Geometry,this.Material);
+            this.object.receiveShadow = true;
+            this.object.castShadow = true;
+            this.object.position.y = y/2;
+            this.object.position.z = -700.0;
+
+        }
+        let View = function(){
+            this.model = new THREE.Object3D();
+
+            this.plane = new Plane(1024*4,1024*2);
+            this.model.add(this.plane.object);
+            
+            this.wall = new Wall(1024*4,512,1024*2);
+            this.model.add(this.wall.object);
+            
+            this.fence = new Fence(200, 64, 2);
+            this.model.add(this.fence.object);
+            
+            scene.add(this.model);
         }
         init();
 
@@ -154,17 +217,16 @@
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.addEventListener('change', function () { renderer.render(scene, camera); });
-            controls.staticMoving = true;
+            controls.enableDamping = true;
             controls.minDistance = 100;
             controls.maxDistance = 500;
             controls.maxPolarAngle = (Math.PI / 2) - 0.1;
-            lighting();
-            plane();
-            transparency();
-            ball();
-            wall();
-            initSky();
+            
             Loadcharcters();
+            lighting();
+            initview();
+            initSky();
+            ball();
             
             window.addEventListener('resize', onWindowResize, false);
             document.addEventListener('keydown', onKeyDown, false);
@@ -173,37 +235,8 @@
             document.addEventListener('mouseup', onMouseUp, false);
             clock = new THREE.Clock();
         }
-        function plane() {
-            
-            // A mesh is created from the geometry and material, then added to the scene
-            let groundTexture = new THREE.TextureLoader().load('img/grasslight-big.jpg');
-            groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
-            groundTexture.repeat.set(32, 32);
-            groundTexture.anisotropy = 16;
-            let plane = new THREE.Mesh(
-                new THREE.PlaneGeometry(3000, 2000),
-                new THREE.MeshPhongMaterial({
-                    map: groundTexture,
-                })
-            );
-            plane.rotateX(-Math.PI / 2);
-            plane.receiveShadow = true;
-            plane.castShadow = true;
-            scene.add(plane);
-        }
-        function transparency() {
-
-            let geometry = new THREE.BoxGeometry(200, 200, 2);
-            //geometry.computeLineDistances();
-            let material = new THREE.MeshStandardMaterial({
-                opacity: 0.5,
-                transparent: true,
-                color: 0x2020af
-            });
-            let mesh = new THREE.Mesh(geometry, material);
-            mesh.castShadow = true;
-            mesh.position.z = -100.0;
-            scene.add(mesh);
+        function initview(){
+            view = new View();
         }
         function ball() {
             let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
@@ -220,24 +253,6 @@
 
             renderer.shadowMap.enabled = true;
             scene.add(soccerball);
-        }
-        function wall() {
-            let skyBox = new THREE.BoxGeometry(3000, 1000, 2000);
-            let materials =
-                [
-                    new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('img/footballwall.jpg'), side: THREE.DoubleSide }),
-                    new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('img/footballwall.jpg'), side: THREE.DoubleSide }),
-                    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, wireframe: true, side: THREE.DoubleSide }),
-                    new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, wireframe: true, side: THREE.DoubleSide }),
-                    new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('img/footballwall.jpg'), side: THREE.DoubleSide }),
-                    new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('img/footballwall.jpg'), side: THREE.DoubleSide }),
-                    //                    new THREE.MeshBasicMaterial( { transparent: true, opacity: 0, wireframe: true, side: THREE.DoubleSide} ),
-                ]
-            let faceMaterial = new THREE.MeshFaceMaterial(materials);
-            let skyBoxMesh = new THREE.Mesh(skyBox, faceMaterial);
-            skyBoxMesh.receiveShadow = true;
-            skyBoxMesh.position.y = 400;
-            scene.add(skyBoxMesh);
         }
         function initSky() {
             // Add Sky
@@ -327,13 +342,12 @@
             camera.updateProjectionMatrix();
         }
         
-        let playermove;
         function handlemoves(){
             if(! ready) return;
-            playermove=player.moveBackward || player.moveForward ||player.moveLeft ||player.moveRight;
+            let playermove=player.moveBackward || player.moveForward ||player.moveLeft ||player.moveRight;
             if(playermove)
-                playeraction.play();
-            else playeraction.stop();
+                player.action.play();
+            else player.action.stop();
         }
         function onKeyDown(event) {
             switch (event.keyCode) {
@@ -416,22 +430,31 @@
         function update() {
             delta = clock.getDelta() ;
             Playermixer.update( delta );
-
-            player.velocity -= player.velocity * 40.0 * delta;
+            
+            
+            player.velocity.x -= player.velocity.x * 40.0 * delta;
+            player.velocity.z -= player.velocity.z * 40.0 * delta;
+            player.velocity.y -= player.velocity.y * 20.0 * delta;
+            
             supervisor.cameraangle -= supervisor.cameraangle * 2 * delta;
-            let rotationsign =  Number( player.moveRight) - Number( player.moveLeft )  ;
+            
+            let rotationsign = Number( player.moveLeft ) - Number( player.moveRight)   ;
             let directionsign =  Number( player.moveForward ) - Number( player.moveBackward );
 
-            player.angle += rotationsign * player.RotationSpeed * delta;
-            player.velocity += directionsign * player.Speed * delta;
-            playercontrols.getObject().position.x=addbetween(playercontrols.getObject().position.x,player.velocity * Math.sin(player.angle),-1300,1300);
-            playercontrols.getObject().position.z=addbetween(playercontrols.getObject().position.z,player.velocity * Math.cos(player.angle),-800,800);
+            player.velocity.y += rotationsign * player.RotationSpeed * delta;
+            player.angle+=player.velocity.y;
             
-            supervisor.camera.position.x = -1 * playercontrols.getObject().position.x * 0.2;
-            playercontrols.getObject().rotation.y = ( player.angle );
+            player.velocity.x += directionsign * player.Speed * Math.sin(player.angle) * delta ;
+            player.velocity.z += directionsign * player.Speed * Math.cos(player.angle) * delta ;
+            player.object.position.x=addbetween(player.object.position.x,player.velocity.x,-1300,1300);
+            player.object.position.z=addbetween(player.object.position.z,player.velocity.z,-800,800);
+            
+            supervisor.camera.position.x = -1 * player.object.position.x * 0.2;
+            player.object.rotation.y = ( player.angle );
 
-            camera.lookAt(playercontrols.getObject().position);
-            human.lookAt(playercontrols.getObject().position);
+//            camera.lookAt(player.object.position);
+            supervisor.object.lookAt(player.object.position);
+//            console.log(supervisor);
 //            human.lookAt()
 //            console.log(human);
 
