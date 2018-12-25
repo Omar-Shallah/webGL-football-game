@@ -137,6 +137,7 @@
                 color: 0x0000ff
             });
             let mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
             mesh.position.z = -100.0;
             scene.add(mesh);
         }
@@ -258,6 +259,9 @@
         function robotLoad() {
             let loader = new THREE.GLTFLoader();
             loader.load('RobotExpressive/RobotExpressive.glb', function (gltf) {
+                gltf.scene.traverse( function( node ) {
+                 if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
+                } );
                 let object = gltf.scene;
                 console.log(gltf);
 
@@ -285,6 +289,9 @@
         function humantLoad() {
             let loader = new THREE.GLTFLoader();
             loader.load('Animated Human by @Quaternius/Animated Human.glb', function (gltf) {
+                gltf.scene.traverse( function( node ) {
+                 if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
+                } );
                 let object = gltf.scene;
                 let walk;
                 console.log(gltf.animations.length);
@@ -314,25 +321,29 @@
         }
 
         function onKeyDown(event) {
-            action.play();
             switch (event.keyCode) {
                 case keyup: // w
                     moveForward = true;
+                    action.play();
                     break;
 
                 case keyleft: // a
                     moveLeft = true;
+                    action.play();
                     break;
 
                 case keydown: // s
                     moveBackward = true;
+                    action.play();
                     break;
 
                 case keyright: // d
                     moveRight = true;
+                    action.play();
                     break;
                 case keyspeed:
                     playerSpeed=200.0;
+                    action.play();
                     break;
 
                 case 32: // space
