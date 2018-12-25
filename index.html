@@ -29,6 +29,7 @@
     <!--        <script src="node_modules/three/examples/js/loaders/OBJLoader.js"></script>-->
 
     <script>
+        const eps=1e-3;
         let keyleft="A".charCodeAt(0);
         let keyright="D".charCodeAt(0);
         let keyup="W".charCodeAt(0);
@@ -43,7 +44,7 @@
             i=0;
         let camera,camera1,
             controls,
-            soccerball,
+            ball,
             fov, aspect, near, far;
         let Playermixer, clock, ready = false;
         let mouseDown = false;
@@ -52,6 +53,30 @@
         let shape, shapeGeometry;
         let player;
         let supervisor;
+        let Ball = function(){
+            this.Speed=800.0;
+            this.RotationSpeed=1.5;
+            this.angle=0;
+            this.canshoot = 0; // 0 ball in ground
+                             // 1 space pressed
+                             // 2 ball in shooting
+            // x,z:movin velocity
+            // y: angle velocity
+            this.velocity = new THREE.Vector3();
+            
+            let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
+
+            let sphere = new THREE.SphereGeometry(10, 10, 36);
+            let material1 = new THREE.MeshPhongMaterial({ map: ballTexture });
+
+            this.object = new THREE.Mesh(sphere, material1);
+            this.object.receiveShadow = true;
+            this.object.castShadow = true;
+            this.object.position.set(0, 15, 100);
+
+            renderer.shadowMap.enabled = true;
+            scene.add(this.object);
+        }
         let Robot = function(){
             let model = this;
             this.Speed=100.0;
@@ -116,11 +141,11 @@
             this.object = new THREE.DirectionalLight(0xcfcbcf, 1);
             this.object.castShadow = true;
             const d = 1500;
-            this.object.shadow.camera.Left = -d;
-            this.object.shadow.camera.Right = d;
-            this.object.shadow.camera.Top = d;
-            this.object.shadow.camera.Bottom = -d;
-            this.object.shadow.camera.Far = far;
+            this.object.shadowCameraLeft = -d;
+            this.object.shadowCameraRight = d;
+            this.object.shadowCameraTop = d;
+            this.object.shadowCameraBottom = -d;
+            this.object.shadowCameraFar = far;
             
             this.object.shadow.mapSize.width = 1024;
             this.object.shadow.mapSize.height = 1024;
@@ -165,12 +190,11 @@
         let Fence = function(x,y,z){
             this.Geometry = new THREE.BoxGeometry(x,y,z);
             this.Material = new THREE.MeshStandardMaterial({
-                opacity: 0.5,
+                opacity: 0.3,
                 transparent: true,
-                color: 0x2020af
+                color: 0x0097e6
             });
             this.object = new THREE.Mesh(this.Geometry,this.Material);
-            this.object.receiveShadow = true;
             this.object.castShadow = true;
             this.object.position.y = y/2;
             this.object.position.z = -700.0;
@@ -185,7 +209,7 @@
             this.wall = new Wall(1024*4,512,1024*2);
             this.model.add(this.wall.object);
             
-            this.fence = new Fence(200, 64, 2);
+            this.fence = new Fence(256, 64, 2);
             this.model.add(this.fence.object);
             
             scene.add(this.model);
@@ -222,37 +246,22 @@
             controls.maxDistance = 500;
             controls.maxPolarAngle = (Math.PI / 2) - 0.1;
             
+            ball = new Ball();
             Loadcharcters();
             lighting();
             initview();
             initSky();
-            ball();
             
             window.addEventListener('resize', onWindowResize, false);
             document.addEventListener('keydown', onKeyDown, false);
             document.addEventListener('keyup', onKeyUp, false);
             document.addEventListener('mousedown', onMouseDown, false);
             document.addEventListener('mouseup', onMouseUp, false);
+            document.addEventListener('keypress', onKeyPress, false);
             clock = new THREE.Clock();
         }
         function initview(){
             view = new View();
-        }
-        function ball() {
-            let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
-
-            let sphere = new THREE.SphereGeometry(10, 10, 36);
-            let material1 = new THREE.MeshPhongMaterial({ map: ballTexture });
-
-            soccerball = new THREE.Mesh(sphere, material1);
-            soccerball.receiveShadow = true;
-            soccerball.castShadow = true;
-            soccerball.position.y += 50;
-            soccerball.position.z += 200;
-            soccerball.position.set(0, 15, 100);
-
-            renderer.shadowMap.enabled = true;
-            scene.add(soccerball);
         }
         function initSky() {
             // Add Sky
@@ -344,10 +353,11 @@
         
         function handlemoves(){
             if(! ready) return;
-            let playermove=player.moveBackward || player.moveForward ||player.moveLeft ||player.moveRight;
+            let playermove=player.moveBackward || player.moveForward || player.moveLeft ||player.moveRight;
             if(playermove)
                 player.action.play();
-            else player.action.stop();
+            else 
+                player.action.stop();
         }
         function onKeyDown(event) {
             switch (event.keyCode) {
@@ -368,13 +378,14 @@
                 case keyspeed:
                     player.Speed=200.0;
                     break;
-                
                 case 32: // space
+                    if(ball.canshoot == 0)
+                        ball.canshoot = 1;
                     break;
             }
             handlemoves();
             
-        };
+        }
 
         function onKeyUp(event) {
             switch (event.keyCode) {
@@ -403,8 +414,14 @@
                     break;
             }
             handlemoves();
-
         };
+        
+        function onKeyPress(event){
+            switch(event.keyCode){
+                case 32: // space
+                    break;
+            }
+        }
         function onMouseDown(event) {
             event.preventDefault();
             mouseDown = true;
@@ -420,15 +437,8 @@
             return Math.min(max ,Math.max(min ,before + change));
         }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            if (ready) {
-                update();
-                render();
-            }
-        }
-        function update() {
-            delta = clock.getDelta() ;
+        
+        function updatecharachter(){
             Playermixer.update( delta );
             
             
@@ -438,7 +448,7 @@
             
             supervisor.cameraangle -= supervisor.cameraangle * 2 * delta;
             
-            let rotationsign = Number( player.moveLeft ) - Number( player.moveRight)   ;
+            let rotationsign = Number( player.moveLeft ) - Number( player.moveRight) ;
             let directionsign =  Number( player.moveForward ) - Number( player.moveBackward );
 
             player.velocity.y += rotationsign * player.RotationSpeed * delta;
@@ -446,30 +456,54 @@
             
             player.velocity.x += directionsign * player.Speed * Math.sin(player.angle) * delta ;
             player.velocity.z += directionsign * player.Speed * Math.cos(player.angle) * delta ;
-            player.object.position.x=addbetween(player.object.position.x,player.velocity.x,-1300,1300);
-            player.object.position.z=addbetween(player.object.position.z,player.velocity.z,-800,800);
+            player.object.position.x=addbetween(player.object.position.x,player.velocity.x,-1024*2 + 25,1024*2 - 25);
+            player.object.position.z=addbetween(player.object.position.z,player.velocity.z,-1024 + 25,1024 - 25);
             
             supervisor.camera.position.x = -1 * player.object.position.x * 0.2;
-            player.object.rotation.y = ( player.angle );
-
-//            camera.lookAt(player.object.position);
+            player.object.rotation.y = ( player.angle );    
+         }
+        function dist(vertex1,vertex2){
+            return Math.sqrt((vertex1.x-vertex2.x)**2 + (vertex1.y-vertex2.y)**2 +(vertex1.z-vertex2.z)**2);
+        }
+        function updateball(){
+            ball.velocity.x -= ball.velocity.x * 2.0 * delta;
+            ball.velocity.z -= ball.velocity.z * 2.0 * delta;
+            ball.velocity.y -= 9.8 * 4.0 * delta;
+            
+            ball.angle = player.angle;
+            if(ball.canshoot == 1 
+            && dist(ball.object.position,player.object.position) <=50){
+                ball.velocity.x += ball.Speed * Math.sin(ball.angle) * delta ;
+                ball.velocity.z += ball.Speed * Math.cos(ball.angle) * delta ;
+                ball.velocity.y += ball.Speed * delta;
+            }
+            if(ball.canshoot==1)ball.canshoot=0;
+            ball.object.position.x=addbetween(ball.object.position.x,ball.velocity.x,-1024*2 + 10,1024*2 - 10);
+            ball.object.position.y=addbetween(ball.object.position.y,ball.velocity.y,10,512 - 10);
+            ball.object.position.z=addbetween(ball.object.position.z,ball.velocity.z,-1024 + 10,1024 - 10);
+            if(ball.canshoot!=1){
+                if(Math.abs(ball.velocity.x)<= eps 
+                && Math.abs(ball.velocity.z)<= eps 
+                ){
+                    ball.canshoot=0;
+                    ball.object.position.y=10;
+                }
+            }
+            if(ball.object.position.y<=10)ball.velocity.y = Math.max(0,ball.velocity.y);            
+        }
+        function animate() {
+            requestAnimationFrame(animate);
+            delta = clock.getDelta() ;
+            if (ready) {
+                update();
+                render();
+            }
+        }
+        function update() {
+            updatecharachter();
+            updateball();
+            camera.lookAt(player.object.position);
             supervisor.object.lookAt(player.object.position);
-//            console.log(supervisor);
-//            human.lookAt()
-//            console.log(human);
-
-            if (mouseDown) {
-                i += 3;
-
-            }
-            if (!mouseDown) {
-
-
-                soccerball.position.x = 0;
-                soccerball.position.y =10;// (10 * Math.sqrt(soccerball.position.x) / Math.sqrt(Math.cos(2 * alpha)) + soccerball.position.x * Math.tan(alpha)) * 0.1;
-            }
-
-
         }
         function render() {
             renderer.render(scene, camera);
