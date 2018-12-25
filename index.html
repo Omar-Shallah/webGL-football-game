@@ -41,7 +41,7 @@
             height,
             alpha =0.5,
             i=0;
-        let camera,camera1,camera2,
+        let camera,camera1,
             controls,
             soccerball,
             fov, aspect, near, far;
@@ -51,6 +51,7 @@
         let raycaster;
         let shape, shapeGeometry;
         let player,playercontrols,playeraction;
+        let supervisor;
         let Robot = function(){
             this.Speed=100.0;
             this.RotationSpeed=1.5;
@@ -90,19 +91,40 @@
             this.playercontrols=playercontrols;
             this.playeraction=playeraction;
         }
-        let directlight = function(){
-            this.light = new THREE.DirectionalLight(0xdfebff, 1);
+        let human=function(){
+            this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+            this.camera.position.set(0,100,-950);
+            this.camera.lookAt(new THREE.Vector3(0,0,0));
+            this.cameraangle = 0;
+            this.RotationSpeed=1;
+            let loader = new THREE.GLTFLoader();
+            loader.load('Animated Human by @Quaternius/Animated Human.glb', function (gltf) {
+                gltf.scene.traverse( function( node ) {
+                 if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
+                } );
+                let object = gltf.scene.children[0].children[0];
+                object.material=new THREE.MeshPhongMaterial({color:0x525252})
+                object.scale.set(15, 15, 15);
+                object.position.set(0, 0, -850);
+                human=object;
+                scene.add(object);
+                console.log(gltf);
+            });   
+        }
+        let directlight = function(x,y,z){
+            this.light = new THREE.DirectionalLight(0xcfcbcf, 1);
             this.light.castShadow = true;
-            const d = 600;
+            const d = 1500;
             this.light.shadowCameraLeft = -d;
             this.light.shadowCameraRight = d;
             this.light.shadowCameraTop = d;
-            this.light.shadowCameraBottom = -d*2;
+            this.light.shadowCameraBottom = -d;
             this.light.shadowCameraFar = far;
             
-            this.light.shadow.mapSize.width = 1024 ;
-            this.light.shadow.mapSize.height = 1024 ;
-            
+            this.light.shadow.mapSize.width = 1024;
+            this.light.shadow.mapSize.height = 1024;
+            this.light.position.set(x,y,z);
+
             scene.add(this.light);            
         }
         init();
@@ -119,9 +141,6 @@
             camera1 = new THREE.PerspectiveCamera(fov, aspect, near, far);
             camera1.position.set(0,150,350);
             camera1.lookAt(new THREE.Vector3(0,0,0));
-            camera2 = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            camera2.position.set(0,200,-900);
-            camera2.lookAt(new THREE.Vector3(0,0,0));
 
             camera=camera1;
 
@@ -155,14 +174,15 @@
             clock = new THREE.Clock();
         }
         function plane() {
+            
             // A mesh is created from the geometry and material, then added to the scene
             let groundTexture = new THREE.TextureLoader().load('img/grasslight-big.jpg');
             groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
-            groundTexture.repeat.set(25, 25);
+            groundTexture.repeat.set(32, 32);
             groundTexture.anisotropy = 16;
             let plane = new THREE.Mesh(
                 new THREE.PlaneGeometry(3000, 2000),
-                new THREE.MeshStandardMaterial({
+                new THREE.MeshPhongMaterial({
                     map: groundTexture,
                 })
             );
@@ -178,7 +198,7 @@
             let material = new THREE.MeshStandardMaterial({
                 opacity: 0.5,
                 transparent: true,
-                color: 0x0000ff
+                color: 0x2020af
             });
             let mesh = new THREE.Mesh(geometry, material);
             mesh.castShadow = true;
@@ -189,7 +209,7 @@
             let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
 
             let sphere = new THREE.SphereGeometry(10, 10, 36);
-            let material1 = new THREE.MeshLambertMaterial({ map: ballTexture });
+            let material1 = new THREE.MeshPhongMaterial({ map: ballTexture });
 
             soccerball = new THREE.Mesh(sphere, material1);
             soccerball.receiveShadow = true;
@@ -215,6 +235,7 @@
                 ]
             let faceMaterial = new THREE.MeshFaceMaterial(materials);
             let skyBoxMesh = new THREE.Mesh(skyBox, faceMaterial);
+            skyBoxMesh.receiveShadow = true;
             skyBoxMesh.position.y = 400;
             scene.add(skyBoxMesh);
         }
@@ -242,7 +263,7 @@
                 inclination: 0.49, // elevation / inclination
                 azimuth: 0.25, // Facing front,
                 sun: ! true,
-                camera2: ! true
+                supervisorView: ! true
             };
             var distance = 400000;
             function guiChanged() {
@@ -259,8 +280,8 @@
                 sunSphere.position.z = distance * Math.sin(phi) * Math.cos(theta);
                 sunSphere.rotation.y += 50;
                 sunSphere.visible=effectController.sun;
-                if(effectController.camera2){
-                    camera=camera2;
+                if(effectController.supervisorView){
+                    camera=supervisor.camera;
                 }
                 else{
                     camera=camera1;
@@ -277,43 +298,22 @@
             gui.add(effectController, "inclination", 0, 1, 0.0001).onChange(guiChanged);
             gui.add(effectController, "azimuth", 0, 1, 0.0001).onChange(guiChanged);
             gui.add(effectController, "sun").onChange(guiChanged);
-            gui.add(effectController, "camera2").onChange(guiChanged);
+            gui.add(effectController, "supervisorView").onChange(guiChanged);
             guiChanged();
         }
         
         function lighting() {
-            let Directlight1 = new directlight();
-            Directlight1.light.position.set(-500, 2000, -500);
-            let Directlight2 = new directlight();
-            Directlight2.light.position.set(1500, 2000, 1000);
+            let Directlight1 = new directlight(-800, 100, -400);
+            let Directlight2 = new directlight(800, 100, -400);
+            let Directlight3 = new directlight(-800, 100, 400);
+            let Directlight4 = new directlight(800, 100, 400);
             
             scene.add(new THREE.HemisphereLight(0xffffbb, 0x080820, 0.5));
             scene.add(new THREE.AmbientLight(0xa59f75, 0.6));
         }
-        let human;
         function Loadcharcters() {
-            player=new Robot();
-            let loader = new THREE.GLTFLoader();
-            loader.load('Animated Human by @Quaternius/Animated Human.glb', function (gltf) {
-                gltf.scene.traverse( function( node ) {
-                 if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
-                } );
-                let object = gltf.scene;
-                let walk;
-                console.log(gltf.animations.length);
-                for (let i = 0; i < gltf.animations.length; i++) {
-                    let clip = gltf.animations[i];
-                    console.log(clip.name);
-                    if (clip.name === 'Walking') {
-                        console.log("found");
-                        walk = clip;
-                    }
-                }
-                object.scale.set(15, 15, 15);
-                object.position.set(0, 0, -600);
-                human=object;
-                scene.add(object);
-            });
+            player = new Robot();
+            supervisor = new human();
         }
         
 
@@ -418,15 +418,16 @@
             Playermixer.update( delta );
 
             player.velocity -= player.velocity * 40.0 * delta;
-
-            let rotationsign = Number( player.moveLeft ) - Number( player.moveRight) ;
+            supervisor.cameraangle -= supervisor.cameraangle * 2 * delta;
+            let rotationsign =  Number( player.moveRight) - Number( player.moveLeft )  ;
             let directionsign =  Number( player.moveForward ) - Number( player.moveBackward );
 
             player.angle += rotationsign * player.RotationSpeed * delta;
             player.velocity += directionsign * player.Speed * delta;
             playercontrols.getObject().position.x=addbetween(playercontrols.getObject().position.x,player.velocity * Math.sin(player.angle),-1300,1300);
             playercontrols.getObject().position.z=addbetween(playercontrols.getObject().position.z,player.velocity * Math.cos(player.angle),-800,800);
-
+            
+            supervisor.camera.position.x = -1 * playercontrols.getObject().position.x * 0.2;
             playercontrols.getObject().rotation.y = ( player.angle );
 
             camera.lookAt(playercontrols.getObject().position);
