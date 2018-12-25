@@ -278,7 +278,7 @@
                 playerContols.getObject().rotation.set(0,0.4,0);
                 scene.add( playerContols.getObject() );
                 ready=true;
-                console.log(object);
+                console.log(gltf);
             });
         }
         let human;
@@ -312,9 +312,15 @@
             camera.aspect = aspect;
             camera.updateProjectionMatrix();
         }
-
+        
+        let playermove;
+        function handlemoves(){
+            playermove=moveBackward || moveForward || moveLeft || moveRight;
+            if(playermove)
+                action.play();
+            else action.stop();
+        }
         function onKeyDown(event) {
-            action.play();
             switch (event.keyCode) {
                 case keyup: // w
                     moveForward = true;
@@ -330,18 +336,19 @@
 
                 case keyright: // d
                     moveRight = true;
-                    break;
+                    break;  
                 case keyspeed:
                     playerSpeed=200.0;
                     break;
-
+                
                 case 32: // space
                     break;
             }
+            handlemoves();
+            
         };
 
         function onKeyUp(event) {
-            action.stop();
             switch (event.keyCode) {
                 case keyup: // w
                     moveForward = false;
@@ -356,7 +363,6 @@
                 case keydown: // s
                     moveBackward = false;
                     break;
-
 //						case 39: // right
                 case keyright: // d
                     moveRight = false;
@@ -368,6 +374,8 @@
                 case 32: // space
                     break;
             }
+            handlemoves();
+
         };
         function onMouseDown(event) {
             event.preventDefault();
