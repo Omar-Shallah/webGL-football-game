@@ -54,8 +54,8 @@
         let player;
         let supervisor;
         
-        let Ball  = function(){
-            this.Speed=800.0;
+        let Ball = function(){
+            this.Speed = 800.0;
             this.RotationSpeed=Math.PI * 5;
             this.canshoot = 0; // 0 ball in ground
             this.angle=0;
@@ -63,6 +63,7 @@
                              // 2 ball in shooting
             this.velocity = new THREE.Vector3();
             this.anglevelocity = 0;
+            
             let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
 
             let sphere = new THREE.SphereBufferGeometry(10, 10, 36);
@@ -79,6 +80,7 @@
         let Robot = function(){
             let model = this;
             this.Speed=100.0;
+            this.fast  = false;
             this.RotationSpeed=1.5;
             this.moveForward = false;
             this.moveBackward = false;
@@ -90,8 +92,12 @@
             this.anglevelocity = 0;
             
             this.object = null;
-            this.action=null;
+            this.activeAction=null;
+            this.previousAction=null;
             let loader = new THREE.GLTFLoader();            
+            let states = [ 'Idle', 'Walking', 'Running', 'Dance', 'Death', 'Sitting', 'Standing' ];
+            let emotes = [ 'Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp' ];
+            this.actions = {};
             loader.load('RobotExpressive/RobotExpressive.glb', function (gltf) {
                 gltf.scene.traverse( function( node ) {
                  if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
@@ -100,20 +106,38 @@
                 console.log(gltf);
 
                 Playermixer = new THREE.AnimationMixer( model.object );
-                let walk;
-                for (let i = 0; i < gltf.animations.length; i++) {
-                     clip = gltf.animations[i];
-                    if (clip.name === 'Walking') {
-                        walk=clip;
-                    }
-                }
-                model.action = Playermixer.clipAction(walk);
+                let animations=gltf.animations;
+				for ( let i = 0; i < animations.length; i++ ) {
+					let clip = animations[ i ];
+					let action = Playermixer.clipAction( clip );
+					model.actions[ clip.name ] = action;
+					if ( emotes.indexOf( clip.name ) >= 0 || states.indexOf( clip.name ) >= 4 ) {
+							action.clampWhenFinished = true;
+							action.loop = THREE.LoopOnce;
+					}
+				}
+                model.previousAction = model.actions['Idle'];
+                model.activeAction = model.actions['Idle'];
+                model.activeAction.play();
                 model.object.scale.set(15,15,15);
                 model.object.position.set(-50,0,100);
                 model.object.rotation.set(0,model.angle,0);
                 scene.add( model.object );
                 ready=true;
             });
+            this.fadeToAction = function( name, duration ) {
+				this.activeAction = this.actions[ name ];
+				if (this.previousAction !== this.activeAction ) {
+					this.previousAction.fadeOut( duration ).stop();
+                    this.activeAction
+                        .reset()
+                        .setEffectiveTimeScale( 1 )
+                        .setEffectiveWeight( 1 )
+                        .fadeIn( duration )
+                        .play();
+				}
+				this.previousAction = this.activeAction;
+			}
         }
         let human = function(){
             let model=this;
@@ -245,8 +269,8 @@
             controls.maxPolarAngle = (Math.PI / 2) - 0.1;
             
             initview();
-            Loadcharcters();
             lighting();
+            Loadcharcters();
             ball = new Ball();
             initSky();
             
@@ -334,7 +358,7 @@
             let Directlight3 = new directlight(-x, y,  z);
             let Directlight4 = new directlight( x, y,  z);
             
-            scene.add(new THREE.HemisphereLight(0xffff0b, 0xf80820, 0.5));
+            scene.add(new THREE.HemisphereLight(0xffff0b, 0x080820, 0.5));
 //            scene.add(new THREE.AmbientLight(0xa59f75, 0.6));
         }
         function Loadcharcters() {
@@ -356,10 +380,15 @@
         function handlemoves(){
             if(! ready) return;
             let playermove=player.moveBackward || player.moveForward || player.moveLeft ||player.moveRight;
-            if(playermove)
-                player.action.play();
-            else 
-                player.action.stop();
+            if(playermove){
+                if(player.fast)
+                    player.fadeToAction('Running',0.2);
+                else
+                    player.fadeToAction('Walking',0.2);
+            }
+            else{
+                player.fadeToAction('Idle',0.2);
+            }
         }
         function onKeyDown(event) {
             switch (event.keyCode) {
@@ -378,7 +407,10 @@
                     player.moveRight = true;
                     break;  
                 case keyspeed:
-                    player.Speed=200.0;
+                    if(! player.fast){
+                        player.fast=true;
+                        player.Speed*=3;
+                    }
                     break;
                 case 32: // space
                     if(ball.canshoot == 0)
@@ -409,7 +441,10 @@
                     player.moveRight = false;
                     break;
                 case keyspeed:
-                    player.Speed=100.0;
+                    if(player.fast){
+                        player.fast=false;
+                        player.Speed/=3;
+                    }
                     break;
 
                 case 32: // space
@@ -438,12 +473,10 @@
         function addbetween(before,change,min,max){
             return Math.min(max ,Math.max(min ,before + change));
         }
-
         
         function updatecharachter(){
             Playermixer.update( delta );
-            
-            
+                        
             player.velocity.x -= player.velocity.x * 40.0 * delta;
             player.velocity.z -= player.velocity.z * 40.0 * delta;
             player.velocity.y -= 9.8 * 30.0 * delta;
@@ -479,8 +512,10 @@
             ball.velocity.z -= ball.velocity.z * 2.0 * delta;
             ball.velocity.y -= 9.8 * 4.0 * delta;
             ball.anglevelocity -= ball.anglevelocity * 1.2 * delta;
+            
             if(ball.canshoot == 1 
             && dist(ball.object.position,player.object.position) <=50){
+                
                 ball.angle = player.angle;
                 ball.anglevelocity +=ball.RotationSpeed * delta;
                 
@@ -489,6 +524,7 @@
                 ball.velocity.y += ball.Speed * delta;
             }
             if(ball.canshoot==1)ball.canshoot=0;
+            
             ball.object.position.x=addbetween(ball.object.position.x,ball.velocity.x,-1024*2 + 10,1024*2 - 10);
             ball.object.position.y=addbetween(ball.object.position.y,ball.velocity.y,10,512 - 10);
             ball.object.position.z=addbetween(ball.object.position.z,ball.velocity.z,-1024 + 10,1024 - 10);
