@@ -171,20 +171,30 @@
         }
         let Wall = function(x,y,z){
             this.Geometry = new THREE.BoxGeometry(x,y,z);
-            let texture = new THREE.TextureLoader().load('img/footballwall.jpg');
-            let material1 = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }); 
+            let texture1 = new THREE.TextureLoader().load('img/footballwall.jpg');
+            texture1.wrapS = texture1.wrapT = THREE.RepeatWrapping;
+            texture1.repeat.set(15,1);
+            texture1.anisotropy = 16;
+            let texture2 = new THREE.TextureLoader().load('img/footballwall.jpg');
+            texture2.wrapS = texture2.wrapT = THREE.RepeatWrapping;
+            texture2.repeat.set(8,1);
+            texture2.anisotropy = 16;
+            let material1 = new THREE.MeshBasicMaterial({ map: texture1, side: THREE.DoubleSide});
             let material2 = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0}); 
+            let material3 = new THREE.MeshBasicMaterial({ map: texture2, side: THREE.DoubleSide});
             this.Material =
                 [
-                    material1,// left
-                    material1,// right
+                    material3,// left
+                    material3,// right
                     material2,// top
                     material2,// bootom
                     material1,// front
                     material1 // back
                 ]
+            
             this.object = new THREE.Mesh(this.Geometry,this.Material);
             this.object.receiveShadow = true;
+//            this.object.castShadow = true;
             this.object.position.y = y/2;
         }
         let Fence = function(x,y,z){
@@ -206,7 +216,7 @@
             this.plane = new Plane(1024*4,1024*2);
             this.model.add(this.plane.object);
             
-            this.wall = new Wall(1024*4,512,1024*2);
+            this.wall = new Wall(1024*4,200,1024*2);
             this.model.add(this.wall.object);
             
             this.fence = new Fence(256, 64, 2);
