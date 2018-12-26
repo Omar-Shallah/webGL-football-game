@@ -53,20 +53,19 @@
         let shape, shapeGeometry;
         let player;
         let supervisor;
-        let Ball = function(){
+
+        let Ball  = function(){
             this.Speed=800.0;
-            this.RotationSpeed=1.5;
-            this.angle=0;
+            this.RotationSpeed=Math.PI * 5;
             this.canshoot = 0; // 0 ball in ground
+            this.angle=0;
                              // 1 space pressed
                              // 2 ball in shooting
-            // x,z:movin velocity
-            // y: angle velocity
             this.velocity = new THREE.Vector3();
-            
+            this.anglevelocity = 0;
             let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
 
-            let sphere = new THREE.SphereGeometry(10, 10, 36);
+            let sphere = new THREE.SphereBufferGeometry(10, 10, 36);
             let material1 = new THREE.MeshPhongMaterial({ map: ballTexture });
 
             this.object = new THREE.Mesh(sphere, material1);
@@ -85,14 +84,14 @@
             this.moveBackward = false;
             this.moveLeft = false;
             this.moveRight = false;
-            this.angle=0;
-            // x,z:movin velocity
-            // y: angle velocity
+
+            this.angle=2;
             this.velocity = new THREE.Vector3();
-            
+            this.anglevelocity = 0;
+
             this.object = null;
             this.action=null;
-            let loader = new THREE.GLTFLoader();            
+            let loader = new THREE.GLTFLoader();
             loader.load('RobotExpressive/RobotExpressive.glb', function (gltf) {
                 gltf.scene.traverse( function( node ) {
                  if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
@@ -110,19 +109,17 @@
                 }
                 model.action = Playermixer.clipAction(walk);
                 model.object.scale.set(15,15,15);
-                model.object.position.set(-40,0,20);
-                model.object.rotation.set(0,0.4,0);
+                model.object.position.set(-50,0,100);
+                model.object.rotation.set(0,model.angle,0);
                 scene.add( model.object );
                 ready=true;
             });
         }
-        let human=function(){
+        let human = function(){
             let model=this;
             this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
             this.camera.position.set(0,100,-950);
             this.camera.lookAt(new THREE.Vector3(0,0,0));
-            this.cameraangle = 0;
-            this.RotationSpeed=1;
             let loader = new THREE.GLTFLoader();
             this.object=null;
             function loadmodel(gltf){
@@ -134,24 +131,25 @@
                 model.object.scale.set(15, 15, 15);
                 model.object.position.set(0, 0, -850);
                 scene.add(model.object);
+                console.log(gltf);
             }
-            loader.load('Animated Human by @Quaternius/Animated Human.glb',loadmodel);   
+            loader.load('Animated Human by @Quaternius/Animated Human.glb',loadmodel);
         }
         let directlight = function(x,y,z){
             this.object = new THREE.DirectionalLight(0xcfcbcf, 1);
             this.object.castShadow = true;
-            const d = 1500;
+            const d = 700;
             this.object.shadowCameraLeft = -d;
             this.object.shadowCameraRight = d;
             this.object.shadowCameraTop = d;
             this.object.shadowCameraBottom = -d;
             this.object.shadowCameraFar = far;
-            
+
             this.object.shadow.mapSize.width = 1024;
             this.object.shadow.mapSize.height = 1024;
             this.object.position.set(x,y,z);
 
-            scene.add(this.object);            
+            scene.add(this.object);
         }
         let Plane = function(x,y){
             // A mesh is created from the geometry and material, then added to the scene
@@ -160,9 +158,9 @@
             this.groundTexture.repeat.set(32, 32);
             this.groundTexture.anisotropy = 16;
             this.object = new THREE.Mesh(
-                new THREE.PlaneGeometry(x,y),
+                new THREE.PlaneBufferGeometry(x,y),
                 new THREE.MeshPhongMaterial({
-                    map: this.groundTexture,
+                    map : this.groundTexture,
                 })
             );
             this.object.rotateX(-Math.PI / 2);
@@ -180,7 +178,7 @@
             texture2.repeat.set(8,1);
             texture2.anisotropy = 16;
             let material1 = new THREE.MeshBasicMaterial({ map: texture1, side: THREE.DoubleSide});
-            let material2 = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0}); 
+            let material2 = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0});
             let material3 = new THREE.MeshBasicMaterial({ map: texture2, side: THREE.DoubleSide});
             this.Material =
                 [
@@ -189,16 +187,16 @@
                     material2,// top
                     material2,// bootom
                     material1,// front
-                    material1 // back
+                    material2 // back
                 ]
-            
+
             this.object = new THREE.Mesh(this.Geometry,this.Material);
             this.object.receiveShadow = true;
 //            this.object.castShadow = true;
             this.object.position.y = y/2;
         }
         let Fence = function(x,y,z){
-            this.Geometry = new THREE.BoxGeometry(x,y,z);
+            this.Geometry = new THREE.BoxBufferGeometry(x,y,z);
             this.Material = new THREE.MeshStandardMaterial({
                 opacity: 0.3,
                 transparent: true,
@@ -210,22 +208,22 @@
             this.object.position.z = -700.0;
 
         }
-        let View = function(){
+        let View  = function(){
             this.model = new THREE.Object3D();
 
             this.plane = new Plane(1024*4,1024*2);
             this.model.add(this.plane.object);
-            
+
             this.wall = new Wall(1024*4,200,1024*2);
             this.model.add(this.wall.object);
-            
+
             this.fence = new Fence(256, 64, 2);
             this.model.add(this.fence.object);
-            
+
             scene.add(this.model);
         }
-        init();
 
+        init();
         animate();
         function init() {
             width = window.innerWidth;
@@ -236,7 +234,7 @@
             far = 4000;
             scene = new THREE.Scene();
             camera1 = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            camera1.position.set(0,150,350);
+            camera1.position.set(-350,150,250);
             camera1.lookAt(new THREE.Vector3(0,0,0));
 
             camera=camera1;
@@ -255,13 +253,13 @@
             controls.minDistance = 100;
             controls.maxDistance = 500;
             controls.maxPolarAngle = (Math.PI / 2) - 0.1;
-            
-            ball = new Ball();
+
+            initview();
             Loadcharcters();
             lighting();
-            initview();
+            ball = new Ball();
             initSky();
-            
+
             window.addEventListener('resize', onWindowResize, false);
             document.addEventListener('keydown', onKeyDown, false);
             document.addEventListener('keyup', onKeyUp, false);
@@ -335,21 +333,25 @@
             gui.add(effectController, "supervisorView").onChange(guiChanged);
             guiChanged();
         }
-        
+
         function lighting() {
-            let Directlight1 = new directlight(-800, 100, -400);
-            let Directlight2 = new directlight(800, 100, -400);
-            let Directlight3 = new directlight(-800, 100, 400);
-            let Directlight4 = new directlight(800, 100, 400);
-            
-            scene.add(new THREE.HemisphereLight(0xffffbb, 0x080820, 0.5));
-            scene.add(new THREE.AmbientLight(0xa59f75, 0.6));
+            let x=1024;
+            let y=200;
+            let z=512;
+
+            let Directlight1 = new directlight(-x, y, -z);
+            let Directlight2 = new directlight( x, y, -z);
+            let Directlight3 = new directlight(-x, y,  z);
+            let Directlight4 = new directlight( x, y,  z);
+
+            scene.add(new THREE.HemisphereLight(0xffff0b, 0x080820, 0.5));
+//            scene.add(new THREE.AmbientLight(0xa59f75, 0.6));
         }
         function Loadcharcters() {
             player = new Robot();
             supervisor = new human();
         }
-        
+
 
         function onWindowResize() {
             width = window.innerWidth;
@@ -360,13 +362,13 @@
             camera.aspect = aspect;
             camera.updateProjectionMatrix();
         }
-        
+
         function handlemoves(){
             if(! ready) return;
             let playermove=player.moveBackward || player.moveForward || player.moveLeft ||player.moveRight;
             if(playermove)
                 player.action.play();
-            else 
+            else
                 player.action.stop();
         }
         function onKeyDown(event) {
@@ -384,7 +386,7 @@
 
                 case keyright: // d
                     player.moveRight = true;
-                    break;  
+                    break;
                 case keyspeed:
                     player.Speed=200.0;
                     break;
@@ -394,7 +396,7 @@
                     break;
             }
             handlemoves();
-            
+
         }
 
         function onKeyUp(event) {
@@ -425,7 +427,7 @@
             }
             handlemoves();
         };
-        
+
         function onKeyPress(event){
             switch(event.keyCode){
                 case 32: // space
@@ -447,30 +449,37 @@
             return Math.min(max ,Math.max(min ,before + change));
         }
 
-        
+
         function updatecharachter(){
             Playermixer.update( delta );
-            
-            
+
+
             player.velocity.x -= player.velocity.x * 40.0 * delta;
             player.velocity.z -= player.velocity.z * 40.0 * delta;
-            player.velocity.y -= player.velocity.y * 20.0 * delta;
-            
-            supervisor.cameraangle -= supervisor.cameraangle * 2 * delta;
-            
+            player.velocity.y -= 9.8 * 30.0 * delta;
+            player.anglevelocity -= player.anglevelocity * 20 * delta;
+
             let rotationsign = Number( player.moveLeft ) - Number( player.moveRight) ;
             let directionsign =  Number( player.moveForward ) - Number( player.moveBackward );
 
-            player.velocity.y += rotationsign * player.RotationSpeed * delta;
-            player.angle+=player.velocity.y;
-            
+            player.anglevelocity += rotationsign * player.RotationSpeed * delta;
+            player.angle+=player.anglevelocity;
+
             player.velocity.x += directionsign * player.Speed * Math.sin(player.angle) * delta ;
             player.velocity.z += directionsign * player.Speed * Math.cos(player.angle) * delta ;
+            if(player.ccanfly)
+                player.velocity.y += player.Speed * delta ;
             player.object.position.x=addbetween(player.object.position.x,player.velocity.x,-1024*2 + 25,1024*2 - 25);
             player.object.position.z=addbetween(player.object.position.z,player.velocity.z,-1024 + 25,1024 - 25);
-            
+
+            player.object.position.y=addbetween(player.object.position.y,player.velocity.y,0,512 - 25);
+            if(player.object.position.y<=0){
+                player.object.position.y=0;
+                player.velocity.y=0;
+            }
+
+            player.object.rotation.y = ( player.angle );
             supervisor.camera.position.x = -1 * player.object.position.x * 0.2;
-            player.object.rotation.y = ( player.angle );    
          }
         function dist(vertex1,vertex2){
             return Math.sqrt((vertex1.x-vertex2.x)**2 + (vertex1.y-vertex2.y)**2 +(vertex1.z-vertex2.z)**2);
@@ -479,10 +488,12 @@
             ball.velocity.x -= ball.velocity.x * 2.0 * delta;
             ball.velocity.z -= ball.velocity.z * 2.0 * delta;
             ball.velocity.y -= 9.8 * 4.0 * delta;
-            
-            ball.angle = player.angle;
-            if(ball.canshoot == 1 
+            ball.anglevelocity -= ball.anglevelocity * 1.2 * delta;
+            if(ball.canshoot == 1
             && dist(ball.object.position,player.object.position) <=50){
+                ball.angle = player.angle;
+                ball.anglevelocity +=ball.RotationSpeed * delta;
+
                 ball.velocity.x += ball.Speed * Math.sin(ball.angle) * delta ;
                 ball.velocity.z += ball.Speed * Math.cos(ball.angle) * delta ;
                 ball.velocity.y += ball.Speed * delta;
@@ -491,15 +502,17 @@
             ball.object.position.x=addbetween(ball.object.position.x,ball.velocity.x,-1024*2 + 10,1024*2 - 10);
             ball.object.position.y=addbetween(ball.object.position.y,ball.velocity.y,10,512 - 10);
             ball.object.position.z=addbetween(ball.object.position.z,ball.velocity.z,-1024 + 10,1024 - 10);
+            ball.object.rotation.x+=ball.anglevelocity;
+            ball.object.rotation.z+=ball.anglevelocity;
             if(ball.canshoot!=1){
-                if(Math.abs(ball.velocity.x)<= eps 
-                && Math.abs(ball.velocity.z)<= eps 
+                if(Math.abs(ball.velocity.x)<= eps
+                && Math.abs(ball.velocity.z)<= eps
                 ){
                     ball.canshoot=0;
                     ball.object.position.y=10;
                 }
             }
-            if(ball.object.position.y<=10)ball.velocity.y = Math.max(0,ball.velocity.y);            
+            if(ball.object.position.y<=10)ball.velocity.y = Math.max(0,ball.velocity.y);
         }
         function animate() {
             requestAnimationFrame(animate);
