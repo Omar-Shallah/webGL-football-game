@@ -25,8 +25,8 @@
     <script src="node_modules/three/examples/js/objects/Sky.js"></script>
     <script src="node_modules/three/examples/js/libs/dat.gui.min.js"></script>
     <script src="node_modules/three/examples/js/controls/PointerLockControls.js"></script>
-
-    <!--        <script src="node_modules/three/examples/js/loaders/OBJLoader.js"></script>-->
+    <script src="node_modules/three/examples/js/loaders/OBJLoader.js"></script>
+    <script src="node_modules/three/examples/js/loaders/MTLLoader.js"></script>
 
     <script>
         const eps=1e-3;
@@ -46,14 +46,75 @@
             controls,
             ball,
             fov, aspect, near, far;
-        let Playermixer, clock, ready = false;
+        let clock, ready = false;
         let mouseDown = false;
 
         let raycaster;
         let shape, shapeGeometry;
         let player;
         let supervisor;
-        
+        let dome;
+        let Dome = function(){
+            let model = this;
+            this.mesh = new THREE.Object3D();
+            this.ready=0;
+            this.np=3;
+            let loader;
+            loader = new THREE.MTLLoader();            
+            loader.load('models/wooden-coffe-table/wooden_coffe_table.mtl', function (material) {
+                material.preload();
+                let tableLoader = new THREE.OBJLoader();
+                tableLoader.setMaterials(material);
+                
+                tableLoader.load('models/wooden-coffe-table/wooden_coffe_table.obj', function (object) {
+                    object.scale.set(50, 50, 50);
+                    object.traverse(function (node) {
+                        if (node instanceof THREE.Mesh) { node.castShadow = true; node.receiveShadow =true; }
+                    });
+                    model.mesh.add(object);
+                    model.ob1=object;
+                    model.ready++;
+                });
+             });
+
+             loader = new THREE.OBJLoader();
+             loader.load('models/vases/FreebieVases.obj', function(object){
+                 object.traverse(function (node) {
+                       if (node instanceof THREE.Mesh) { 
+                            node.castShadow = true;
+                        }
+                    });
+                object.scale.set(0.05,0.05,0.05);
+                object.position.y+=65;
+                object.position.z+=10;
+                 
+                model.mesh.add(object);
+                 model.ob2=object;
+                    model.ready++;
+             });
+             loader = new THREE.GLTFLoader();
+             loader.load('models/groot_dancing_2/scene.gltf',function(gltf){
+                 let object = gltf.scene;
+                 object.scale.set(0.1,0.1,0.1);
+                 object.position.set(-50,0,-850);
+                 object.rotation.y=-Math.PI;
+                 model.ob3 = object;
+                 model.ob3mixer=new THREE.AnimationMixer(object);
+                 
+                 model.ob3action = model.ob3mixer.clipAction( gltf.animations[0] );
+                 model.ob3action.play();
+                 model.ready++;
+                 scene.add(object);
+                 console.log(gltf)
+             });
+             this.mesh.position.set(20, 0, -850);
+             scene.add(this.mesh);
+             this.mesh.position.x+=100;
+            console.log(model);
+        }
+        let hos = function(){
+            
+        }
         let Ball = function(){
             this.Speed = 800.0;
             this.RotationSpeed=Math.PI * 5;
@@ -91,27 +152,28 @@
             this.velocity = new THREE.Vector3();
             this.anglevelocity = 0;
             
+            this.mixer=null;
             this.object = null;
             this.activeAction=null;
             this.previousAction=null;
+            this.ready=false;
             let loader = new THREE.GLTFLoader();            
-            let states = [ 'Idle', 'Walking', 'Running', 'Dance', 'Death', 'Sitting', 'Standing' ];
-            let emotes = [ 'Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp' ];
+            let states = [ 'Idle', 'Walking', 'Running', 'Dance', 'Death', 'Sitting', 'Standing','Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp' ];
             this.actions = {};
-            loader.load('RobotExpressive/RobotExpressive.glb', function (gltf) {
+            loader.load('models/RobotExpressive/RobotExpressive.glb', function (gltf) {
                 gltf.scene.traverse( function( node ) {
                  if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
                 } );
                 model.object = gltf.scene.children[0];
                 console.log(gltf);
 
-                Playermixer = new THREE.AnimationMixer( model.object );
+                model.mixer = new THREE.AnimationMixer( model.object );
                 let animations=gltf.animations;
 				for ( let i = 0; i < animations.length; i++ ) {
 					let clip = animations[ i ];
-					let action = Playermixer.clipAction( clip );
+					let action = model.mixer.clipAction( clip );
 					model.actions[ clip.name ] = action;
-					if ( emotes.indexOf( clip.name ) >= 0 || states.indexOf( clip.name ) >= 4 ) {
+					if ( states.indexOf( clip.name ) >= 4 ) {
 							action.clampWhenFinished = true;
 							action.loop = THREE.LoopOnce;
 					}
@@ -123,7 +185,7 @@
                 model.object.position.set(-50,0,100);
                 model.object.rotation.set(0,model.angle,0);
                 scene.add( model.object );
-                ready=true;
+                model.ready=true;
             });
             this.fadeToAction = function( name, duration ) {
 				this.activeAction = this.actions[ name ];
@@ -142,11 +204,12 @@
         let human = function(){
             let model=this;
             this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            this.camera.position.set(0,100,-950);
+            this.camera.position.set(0,50,-950);
             this.camera.lookAt(new THREE.Vector3(0,0,0));
             let loader = new THREE.GLTFLoader();
             this.object=null;
-            function loadmodel(gltf){
+            this.ready=false;
+            loader.load('models/Human/Animated Human.glb',function (gltf){
                 gltf.scene.traverse( function( node ) {
                     if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
                 } );
@@ -156,8 +219,8 @@
                 model.object.position.set(0, 0, -850);
                 scene.add(model.object);
                 console.log(gltf);
-            }
-            loader.load('Animated Human by @Quaternius/Animated Human.glb',loadmodel);   
+                model.ready=true;
+            });
         }
         let directlight = function(x,y,z){
             this.object = new THREE.DirectionalLight(0xcfcbcf, 1);
@@ -168,12 +231,12 @@
             this.object.shadowCameraTop = d;
             this.object.shadowCameraBottom = -d;
             this.object.shadowCameraFar = far;
-            
+
             this.object.shadow.mapSize.width = 1024;
             this.object.shadow.mapSize.height = 1024;
             this.object.position.set(x,y,z);
 
-            scene.add(this.object);            
+            scene.add(this.object);
         }
         let Plane = function(x,y){
             // A mesh is created from the geometry and material, then added to the scene
@@ -191,35 +254,45 @@
             this.object.receiveShadow = true;
             this.object.castShadow = true;
         }
-        let Wall  = function(x,y,z){
-            this.Geometry = new THREE.BoxBufferGeometry(x,y,z);
-            let texture = new THREE.TextureLoader().load('img/footballwall.jpg');
-            let material1 = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }); 
-            let material2 = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0}); 
+        let Wall = function(x,y,z){
+            this.Geometry = new THREE.BoxGeometry(x,y,z);
+            let texture1 = new THREE.TextureLoader().load('img/footballwall.jpg');
+            texture1.wrapS = texture1.wrapT = THREE.RepeatWrapping;
+            texture1.repeat.set(15,1);
+            texture1.anisotropy = 16;
+            let texture2 = new THREE.TextureLoader().load('img/footballwall.jpg');
+            texture2.wrapS = texture2.wrapT = THREE.RepeatWrapping;
+            texture2.repeat.set(8,1);
+            texture2.anisotropy = 16;
+            let material1 = new THREE.MeshBasicMaterial({ map: texture1, side: THREE.DoubleSide});
+            let material2 = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0});
+            let material3 = new THREE.MeshBasicMaterial({ map: texture2, side: THREE.DoubleSide});
             this.Material =
                 [
-                    material1,// left
-                    material1,// right
+                    material3,// left
+                    material3,// right
                     material2,// top
                     material2,// bootom
                     material1,// front
                     material2 // back
                 ]
+
             this.object = new THREE.Mesh(this.Geometry,this.Material);
             this.object.receiveShadow = true;
+//            this.object.castShadow = true;
             this.object.position.y = y/2;
         }
         let Fence = function(x,y,z){
-            this.Geometry = new THREE.BoxBufferGeometry(x,y,z);
+            this.Geometry = new THREE.SphereBufferGeometry(x,36,36);
             this.Material = new THREE.MeshStandardMaterial({
                 opacity: 0.3,
                 transparent: true,
-                color: 0x0097e6
+                color: 0x0097e6,
             });
             this.object = new THREE.Mesh(this.Geometry,this.Material);
             this.object.castShadow = true;
-            this.object.position.y = y/2;
-            this.object.position.z = -700.0;
+            this.object.position.y = -20;
+            this.object.position.z = -900.0;
 
         }
         let View  = function(){
@@ -227,16 +300,16 @@
 
             this.plane = new Plane(1024*4,1024*2);
             this.model.add(this.plane.object);
-            
-            this.wall = new Wall(1024*4,512,1024*2);
+
+            this.wall = new Wall(1024*4,200,1024*2);
             this.model.add(this.wall.object);
-            
+
             this.fence = new Fence(256, 64, 2);
             this.model.add(this.fence.object);
-            
+
             scene.add(this.model);
         }
-        
+
         init();
         animate();
         function init() {
@@ -263,16 +336,14 @@
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.addEventListener('change', function () { renderer.render(scene, camera); });
-            controls.enableDamping = true;
-            controls.minDistance = 100;
-            controls.maxDistance = 500;
-            controls.maxPolarAngle = (Math.PI / 2) - 0.1;
-            
+//            controls.enableDdancing_stormtrooperPI / 2) - 0.1;
+
             initview();
             lighting();
             Loadcharcters();
-            ball = new Ball();
             initSky();
+            ball = new Ball();
+            dome =new Dome();
             
             window.addEventListener('resize', onWindowResize, false);
             document.addEventListener('keydown', onKeyDown, false);
@@ -296,7 +367,7 @@
                 new THREE.SphereBufferGeometry(20000, 16, 8),
                 new THREE.MeshBasicMaterial({ color: 0xffffff })
             );
-            sunSphere.position.y = - 700000;
+            sunSphere.position.y = - 7000000;
             sunSphere.visible = true;
             scene.add(sunSphere);
             /// GUI
@@ -306,7 +377,7 @@
                 mieCoefficient: 0.005,
                 mieDirectionalG: 0.8,
                 luminance: 1,
-                inclination: 0.49, // elevation / inclination
+                inclination: 0, // elevation / inclination
                 azimuth: 0.25, // Facing front,
                 sun: ! true,
                 supervisorView: ! true
@@ -347,17 +418,16 @@
             gui.add(effectController, "supervisorView").onChange(guiChanged);
             guiChanged();
         }
-        
+
         function lighting() {
             let x=1024;
             let y=200;
             let z=512;
-            
+
             let Directlight1 = new directlight(-x, y, -z);
             let Directlight2 = new directlight( x, y, -z);
             let Directlight3 = new directlight(-x, y,  z);
             let Directlight4 = new directlight( x, y,  z);
-            
             scene.add(new THREE.HemisphereLight(0xffff0b, 0x080820, 0.5));
 //            scene.add(new THREE.AmbientLight(0xa59f75, 0.6));
         }
@@ -365,7 +435,7 @@
             player = new Robot();
             supervisor = new human();
         }
-        
+
 
         function onWindowResize() {
             width = window.innerWidth;
@@ -376,7 +446,7 @@
             camera.aspect = aspect;
             camera.updateProjectionMatrix();
         }
-        
+
         function handlemoves(){
             if(! ready) return;
             let playermove=player.moveBackward || player.moveForward || player.moveLeft ||player.moveRight;
@@ -405,7 +475,7 @@
 
                 case keyright: // d
                     player.moveRight = true;
-                    break;  
+                    break;
                 case keyspeed:
                     if(! player.fast){
                         player.fast=true;
@@ -418,7 +488,7 @@
                     break;
             }
             handlemoves();
-            
+
         }
 
         function onKeyUp(event) {
@@ -452,7 +522,7 @@
             }
             handlemoves();
         };
-        
+
         function onKeyPress(event){
             switch(event.keyCode){
                 case 32: // space
@@ -473,21 +543,20 @@
         function addbetween(before,change,min,max){
             return Math.min(max ,Math.max(min ,before + change));
         }
-        
         function updatecharachter(){
-            Playermixer.update( delta );
-                        
+            player.mixer.update( delta );
+            dome.ob3mixer.update(delta);
             player.velocity.x -= player.velocity.x * 40.0 * delta;
             player.velocity.z -= player.velocity.z * 40.0 * delta;
             player.velocity.y -= 9.8 * 30.0 * delta;
             player.anglevelocity -= player.anglevelocity * 20 * delta;
-                        
+
             let rotationsign = Number( player.moveLeft ) - Number( player.moveRight) ;
             let directionsign =  Number( player.moveForward ) - Number( player.moveBackward );
 
             player.anglevelocity += rotationsign * player.RotationSpeed * delta;
             player.angle+=player.anglevelocity;
-            
+
             player.velocity.x += directionsign * player.Speed * Math.sin(player.angle) * delta ;
             player.velocity.z += directionsign * player.Speed * Math.cos(player.angle) * delta ;
             if(player.ccanfly)
@@ -502,7 +571,7 @@
             }
 
             player.object.rotation.y = ( player.angle );
-            supervisor.camera.position.x = -1 * player.object.position.x * 0.2;
+            supervisor.camera.position.x = -1 * player.object.position.x * 0.1;
          }
         function dist(vertex1,vertex2){
             return Math.sqrt((vertex1.x-vertex2.x)**2 + (vertex1.y-vertex2.y)**2 +(vertex1.z-vertex2.z)**2);
@@ -512,13 +581,12 @@
             ball.velocity.z -= ball.velocity.z * 2.0 * delta;
             ball.velocity.y -= 9.8 * 4.0 * delta;
             ball.anglevelocity -= ball.anglevelocity * 1.2 * delta;
-            
-            if(ball.canshoot == 1 
+            if(ball.canshoot == 1
             && dist(ball.object.position,player.object.position) <=50){
                 
                 ball.angle = player.angle;
                 ball.anglevelocity +=ball.RotationSpeed * delta;
-                
+
                 ball.velocity.x += ball.Speed * Math.sin(ball.angle) * delta ;
                 ball.velocity.z += ball.Speed * Math.cos(ball.angle) * delta ;
                 ball.velocity.y += ball.Speed * delta;
@@ -531,14 +599,14 @@
             ball.object.rotation.x+=ball.anglevelocity;
             ball.object.rotation.z+=ball.anglevelocity;
             if(ball.canshoot!=1){
-                if(Math.abs(ball.velocity.x)<= eps 
-                && Math.abs(ball.velocity.z)<= eps 
+                if(Math.abs(ball.velocity.x)<= eps
+                && Math.abs(ball.velocity.z)<= eps
                 ){
                     ball.canshoot=0;
                     ball.object.position.y=10;
                 }
             }
-            if(ball.object.position.y<=10)ball.velocity.y = Math.max(0,ball.velocity.y);            
+            if(ball.object.position.y<=10)ball.velocity.y = Math.max(0,ball.velocity.y);
         }
         function animate() {
             requestAnimationFrame(animate);
@@ -546,6 +614,10 @@
             if (ready) {
                 update();
                 render();
+            }
+            else{
+                ready=player.ready && supervisor.ready && dome.ready==dome.np;
+                
             }
         }
         function update() {
