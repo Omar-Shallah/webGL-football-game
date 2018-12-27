@@ -608,7 +608,6 @@
                 ball.velocity.y += ball.Speed *0.8 * delta;
             }
             if(ball.canshoot==1)ball.canshoot=0;
-            
             ball.object.position.x+=ball.velocity.x;
             ball.object.position.y+=ball.velocity.y;
             ball.object.position.z+=ball.velocity.z;
@@ -624,9 +623,12 @@
                 }
                 if(collisitions(ball.object)){
                     ball.object.position.x-=ball.velocity.x;
-//                    ball.object.position.y-=ball.velocity.y;
                     ball.object.position.z-=ball.velocity.z;
-                    ball.angle+=Math.PI;
+//                    ball.velocity.x/=Math.sin(ball.angle);
+//                    ball.velocity.z/=Math.cos(ball.angle);
+//                    ball.angle = Math.PI;
+//                    ball.object.position = player.object.position;
+
                 }
             }
             if(ball.object.position.y<=10){
