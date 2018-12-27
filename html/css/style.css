@@ -1,0 +1,67 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:800);
+@import url(https://fonts.googleapis.com/css?family=Cairo:400,700&subset=arabic);
+
+body { 
+    margin: 0;
+}
+#world {
+  background: #ebe5e7;
+  position:absolute;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+#title { 
+    position: absolute;
+    top: 10%;
+    width: 100%;
+    margin: auto;
+    font-family:'Cairo', sans-serif;
+    font-weight: 700;
+    color:#653f4c;
+    font-size:2em;
+    text-transform: uppercase;
+    text-align : center;
+  
+}
+.lightTitle { 
+    color: #993f4c;
+    font-size: 1.5rem;
+}
+#instructions{
+  position:absolute;
+  width:100%;
+  top:60%;
+  margin-top:120px;
+  text-align: center;
+}
+#instructions a { 
+    font-family:'Cairo', sans-serif;
+    font-weight: 700;
+    margin: 0.5rem;
+    color:#993f4c;
+    font-size:.9em;
+    text-transform: uppercase;
+    text-decoration:none; 
+  
+}
+.lightInstructions {
+  color:#993f4c;
+  font-size:.8em;
+}
+
+#credits{
+  position:absolute;
+  width:100%;
+  margin: auto;
+  bottom:0;
+  margin-bottom:20px;
+  font-family:'Cairo', sans-serif;
+  color:#b297a2;
+  font-size:0.7em;
+  text-transform: uppercase;
+  text-align : center;
+}
+#credits a {
+  color:#b297a2;
+}
