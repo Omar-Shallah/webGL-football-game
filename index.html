@@ -85,10 +85,12 @@
             controls,
             ball,
             fov, aspect, near, far;
+        
+        let effectController;
         let clock, ready = false;
         let mouseDown = false;
         let goal1, goal2;
-
+        let hemisphereLight;
         let raycaster, collidableMeshList = [];
         let shape, shapeGeometry;
         let player;
@@ -228,10 +230,8 @@
         let Ball = function () {
             this.Speed = 1000.0;
             this.RotationSpeed = Math.PI * 5;
-            this.canshoot = 0; // 0 ball in ground
+            this.canshoot = true; 
             this.angle = 0;
-            // 1 space pressed
-            // 2 ball in shooting
             this.velocity = new THREE.Vector3();
             this.anglevelocity = 0;
 
@@ -415,7 +415,7 @@
             this.object = new THREE.Mesh(this.Geometry, this.Material);
             this.object.castShadow = true;
             this.object.position.y = y / 2;
-            this.object.position.z = -700.0;
+            this.object.position.z = -500.0;
 
         }
         let View = function () {
@@ -460,11 +460,16 @@
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.addEventListener('change', function () { renderer.render(scene, camera); });
             controls.enableDamping = true;
-            controls.keyPanSpeed = 10;
+            controls.keyPanSpeed = 10
             controls.panSpeed = 10;
             controls.rotateSpeed = 1;
             controls.zoomSpeed = 3;
-
+            
+            controls.maxDistance=1000;
+            controls.minDistance=200;
+            
+            controls.maxPolarAngle=Math.PI/2 - 0.1;
+            
             var listener = new THREE.AudioListener();
             camera.add(listener);
             var sound = new THREE.Audio(listener);
@@ -512,7 +517,7 @@
             sunSphere.visible = true;
             scene.add(sunSphere);
             /// GUI
-            var effectController = {
+            let day = {
                 turbidity: 10,
                 rayleigh: 2,
                 mieCoefficient: 0.005,
@@ -520,35 +525,61 @@
                 luminance: 1,
                 inclination: 0, // elevation / inclination
                 azimuth: 0.25, // Facing front,
-                sun: ! true,
+                sun: true,
                 supervisorView: ! true
             };
-            var distance = 400000;
+            let night={
+                turbidity: 2,
+                rayleigh: 5,
+                mieCoefficient: 0.1,
+                mieDirectionalG: 0.5,
+                luminance: 0.1,
+                inclination: 7, // elevation / inclination
+                azimuth: 0.5, // Facing front,
+                sun: ! true
+            }
+            effectController = {
+                effect: day,
+                camerawithplayer:true,
+                supervisorView: ! true,
+                night: ! true
+            };
+            let distance = 400000;
             function guiChanged() {
-                var uniforms = sky.material.uniforms;
-                uniforms.turbidity.value = effectController.turbidity;
-                uniforms.rayleigh.value = effectController.rayleigh;
-                uniforms.luminance.value = effectController.luminance;
-                uniforms.mieCoefficient.value = effectController.mieCoefficient;
-                uniforms.mieDirectionalG.value = effectController.mieDirectionalG;
-                var theta = Math.PI * (effectController.inclination - 0.5);
-                var phi = 2 * Math.PI * (effectController.azimuth - 0.5);
-                sunSphere.position.x = distance * Math.cos(phi);
-                sunSphere.position.y = distance * Math.sin(phi) * Math.sin(theta);
-                sunSphere.position.z = distance * Math.sin(phi) * Math.cos(theta);
-                sunSphere.rotation.y += 50;
-                sunSphere.visible = effectController.sun;
+                if(effectController.night){
+                    hemisphereLight.intensity=0.1;
+                    effectController.effect=night;
+                }
+                else{
+                    hemisphereLight.intensity=0.5;
+                    effectController.effect=day;
+                }
                 if (effectController.supervisorView) {
                     camera = supervisor.camera;
                 }
                 else {
                     camera = camera1;
                 }
+                var uniforms = sky.material.uniforms;
+                uniforms.turbidity.value = effectController.effect.turbidity;
+                uniforms.rayleigh.value = effectController.effect.rayleigh;
+                uniforms.luminance.value = effectController.effect.luminance;
+                uniforms.mieCoefficient.value = effectController.effect.mieCoefficient;
+                uniforms.mieDirectionalG.value = effectController.effect.mieDirectionalG;
+                var theta = Math.PI * (effectController.effect.inclination - 0.5);
+                var phi = 2 * Math.PI * (effectController.effect.azimuth - 0.5);
+                sunSphere.position.x = distance * Math.cos(phi);
+                sunSphere.position.y = distance * Math.sin(phi) * Math.sin(theta);
+                sunSphere.position.z = distance * Math.sin(phi) * Math.cos(theta);
+                sunSphere.rotation.y += 50;
+                sunSphere.visible = effectController.effect.sun;
                 uniforms.sunPosition.value.copy(sunSphere.position);
                 renderer.render(scene, camera);
             }
-            var gui = new dat.GUI();
+            let gui = new dat.GUI();
             gui.add(effectController, "supervisorView").onChange(guiChanged);
+            gui.add(effectController, "night").onChange(guiChanged);
+            gui.add(effectController, "camerawithplayer");
             guiChanged();
         }
 
@@ -561,7 +592,8 @@
             let Directlight2 = new directlight(x, y, -z);
             let Directlight3 = new directlight(-x, y, z);
             let Directlight4 = new directlight(x, y, z);
-            scene.add(new THREE.HemisphereLight(0xffff0b, 0x080820, 0.5));
+                hemisphereLight = new THREE.HemisphereLight(0xffff0b, 0x080820, 0.5);
+            scene.add(hemisphereLight);
             //            scene.add(new THREE.AmbientLight(0xa59f75, 0.6));
         }
         function Loadcharcters() {
@@ -616,8 +648,8 @@
                     }
                     break;
                 case 32: // space
-                    if (ball.canshoot == 0)
-                        ball.canshoot = 1;
+                    if (ball.canshoot )
+                        ball.canshoot = false;
                     break;
             }
             handlemoves();
@@ -696,8 +728,13 @@
             player.velocity.z += directionsign * player.Speed * Math.cos(player.angle) * delta;
             if (player.ccanfly)
                 player.velocity.y += player.Speed * delta;
+            
             player.object.position.x += player.velocity.x;
             player.object.position.z += player.velocity.z;
+            if(effectController.camerawithplayer){
+                camera1.position.x += player.velocity.x;
+                camera1.position.z += player.velocity.z;
+            }
 
             player.object.position.y = addbetween(player.object.position.y, player.velocity.y, 0, 512 - 25);
             if (player.object.position.y <= 0) {
@@ -706,11 +743,15 @@
             }
 
             player.object.rotation.y = (player.angle);
-            supervisor.camera.position.x = -1 * player.object.position.x * 0.1;
             if (collisitions(player.object)) {
                 player.object.position.x -= player.velocity.x;
                 player.object.position.z -= player.velocity.z;
+                if(effectController.camerawithplayer){
+                    camera1.position.x -= player.velocity.x;
+                    camera1.position.z -= player.velocity.z;
+                }
             }
+            supervisor.camera.position.x = -1 * player.object.position.x * 0.2;
         }
         function dist(vertex1, vertex2) {
             return Math.sqrt((vertex1.x - vertex2.x) ** 2 + (vertex1.y - vertex2.y) ** 2 + (vertex1.z - vertex2.z) ** 2);
@@ -736,12 +777,8 @@
         function collisitions(object) {
             //            console.log(scene,object);
             var originPoint = object.position.clone();
-            var dx = [0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 1, -1, 1, -1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, -1, 1, -1, -1, -1, -1, -1, 1, -1, 1, -1, 1, -1, 1, -1,];
-            var dy = [0, 0, 1, -1, 0, 0, 1, -1, 1, -1, 0, 0, 0, 0, -1, 1, 1, -1, 1, -1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, 1, -1,];
-            var dz = [1, -1, 0, 0, 0, 0, -1, 1, 1, -1, -1, 1, 1, -1, 0, 0, 0, 0, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, -1, -1, -1, -1,];
-            // console.log("Thhhhhhhhhhhhhhh",ball);
-            for (let i = 0; i < dx.length; i++) {
-                ray = new THREE.Raycaster(originPoint, new THREE.Vector3(dx[i], dy[i], dz[i]));
+            for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (let dz = -1; dz <= 1; dz++) {
+                ray = new THREE.Raycaster(originPoint, new THREE.Vector3(dx, dy, dz));
                 if (coll1(ray, object)) return 1;
             }
             return 0;
@@ -749,52 +786,48 @@
         function updateball() {
             ball.velocity.x -= ball.velocity.x * 2.0 * delta;
             ball.velocity.z -= ball.velocity.z * 2.0 * delta;
-            ball.velocity.y -= 12.8 * 4.0 * delta;
+            ball.velocity.y -= 9.8 * 4.0 * delta;
             ball.anglevelocity -= ball.anglevelocity * 1.2 * delta;
-            if (ball.canshoot == 1
-                && dist(ball.object.position, player.object.position) <= 50) {
+            if (! ball.canshoot && dist(ball.object.position, player.object.position) <= 50) {
 
                 ball.angle = player.angle;
                 ball.anglevelocity += ball.RotationSpeed * delta;
 
                 ball.velocity.x += ball.Speed * delta;
                 ball.velocity.z += ball.Speed * delta;
-                ball.velocity.y += ball.Speed * 0.8 * delta;
+                ball.velocity.y += ball.Speed * delta;
             }
-            if (ball.canshoot == 1) ball.canshoot = 0;
+            if (! ball.canshoot ) ball.canshoot = true;
 
             ball.object.position.x += ball.velocity.x * Math.sin(ball.angle);
-            ball.object.position.y += ball.velocity.y;
             ball.object.position.z += ball.velocity.z * Math.cos(ball.angle);
+            ball.object.position.y += ball.velocity.y;
 
             ball.object.rotation.x += ball.anglevelocity;
             ball.object.rotation.z += ball.anglevelocity;
-            if (ball.canshoot != 1) {
-                if (Math.abs(ball.velocity.x) <= eps
-                    && Math.abs(ball.velocity.z) <= eps
-                ) {
-                    ball.canshoot = 0;
-                    ball.object.position.y = 10;
-                }
-                if (collisitions(ball.object)) {
-                    ball.object.position.x -= ball.velocity.x;
-                    ball.object.position.z -= ball.velocity.z;
-                    console.log(ball.angle);
-                    ball.angle += Math.PI;
-                    console.log(ball.angle);
-                    ball.object.position.x += ball.velocity.x * Math.sin(ball.angle);
-                    ball.object.position.z += ball.velocity.z * Math.cos(ball.angle);
-                }
+            
+            if (Math.abs(ball.velocity.x) <= eps && Math.abs(ball.velocity.z) <= eps ) ball.object.position.y = 10;
+            
+            if (collisitions(ball.object)) {
+                ball.object.position.x -= ball.velocity.x* Math.sin(ball.angle);
+                ball.object.position.z -= ball.velocity.z* Math.cos(ball.angle);
+                
+                ball.angle += Math.PI;
+                
+                ball.object.position.x += ball.velocity.x * Math.sin(ball.angle);
+                ball.object.position.z += ball.velocity.z * Math.cos(ball.angle);
             }
             if (ball.object.position.y <= 10) {
                 ball.velocity.y = Math.max(0, ball.velocity.y);
+                ball.velocity.y += ball.velocity.x *2;
+                
                 ball.object.position.y = 10;
             }
             if (ball.isOut()) {
                 console.log("out");
                 ball.object.position.x = player.object.position.x;
                 ball.object.position.z = player.object.position.z;
-                ball.canshoot = 0;
+                ball.canshoot = true;
             }
         }
         function animate() {
@@ -815,8 +848,18 @@
         function update() {
             updatecharachter();
             updateball();
-            camera.lookAt(player.object.position);
-            //            controls.update();
+
+            if(effectController.camerawithplayer){
+                let ve=new THREE.Vector3();
+                ve.x=player.object.position.x;
+                ve.y=player.object.position.y;
+                ve.z=player.object.position.z;
+                controls.target = ve;
+            }
+            camera.position.z=addbetween(camera.position.z,0,-1020,1020);
+            camera.position.x=addbetween(camera.position.x,0,-2040,2040);
+//            controls.update();
+            supervisor.camera.lookAt(player.object.position);
             supervisor.object.lookAt(player.object.position);
             dome.groot.lookAt(ball.object.position);
         }
