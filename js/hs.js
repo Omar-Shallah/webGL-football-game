@@ -49,6 +49,7 @@ let Fence = function(x,y,z){
         opacity: 0.3,
         transparent: true,
         color: 0x0097e6,
+        side: THREE.DoublesSide
     });
     this.object = new THREE.Mesh(this.Geometry,this.Material);
     this.object.castShadow = true;
