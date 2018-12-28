@@ -4,7 +4,8 @@
 <head>
     <meta charset="utf-8">
     <title>Football Player</title>
-    <link rel="icon" href="Ball.png">    <style>
+    <link rel="icon" href="img/favicon.png">
+    <style>
         body {
             margin: 0;
             overflow: hidden;
@@ -14,29 +15,34 @@
             width: 100%;
             height: 100%
         }
-    #scene{
+
+        #scene {
             display: none;
         }
-    
-    .loading {
+
+        .loading {
             display: block;
             width: 100%;
-            min-height: 1000;
+            height: 100vh;
             background: #333;
             overflow: hidden;
         }
-    .loading h5 {
-        color: #fff;
-        font-size: 50px;
-        text-align: center;
-        font-weight: bolder;
-    }
-    
+
+        .imgloader {
+            content: url('img/loader.gif');
+            position: absolute;
+            left: calc(50vw - 50px);
+            top: calc(50vh - 50px);
+            width: 100px;
+
+        }
     </style>
 </head>
 
 <body>
-   <div class="loading" id="container"> <h5>loading...</h5> </div>
+    <div class="loading" id="container">
+        <div class="imgloader"> </div>
+    </div>
     <div id="scene"></div>
 
     <script src="node_modules/three/build/three.js"></script>
@@ -47,10 +53,10 @@
     <script src="node_modules/three/examples/js/controls/PointerLockControls.js"></script>
     <script src="node_modules/three/examples/js/loaders/OBJLoader.js"></script>
     <script src="node_modules/three/examples/js/loaders/MTLLoader.js"></script>
-    
-<!--    my scripts-->
-<!--    <script src="js/hs.js"></script>-->
-<!--    <script src="js/Stadium.js"></script>-->
+
+    <!--    my scripts-->
+    <!--    <script src="js/hs.js"></script>-->
+    <!--    <script src="js/Stadium.js"></script>-->
     <script>
         let loading = document.getElementById("container");
         let body = document.getElementById("scene");
@@ -60,285 +66,285 @@
             console.log(scene);
 
         }
-//       window.onload = setTimeout(preloader, 2600);
-        
-        const eps=1e-3;
-        let keyleft="A".charCodeAt(0);
-        let keyright="D".charCodeAt(0);
-        let keyup="W".charCodeAt(0);
-        let keydown="S".charCodeAt(0);
-        let keyspeed="E".charCodeAt(0);
+        //       window.onload = setTimeout(preloader, 2600);
+
+        const eps = 1e-3;
+        let keyleft = "A".charCodeAt(0);
+        let keyright = "D".charCodeAt(0);
+        let keyup = "W".charCodeAt(0);
+        let keydown = "S".charCodeAt(0);
+        let keyspeed = "E".charCodeAt(0);
         let scene,
             renderer,
             container,
             width,
             height,
-            alpha =0.5,
-            i=0;
-        let camera,camera1,
+            alpha = 0.5,
+            i = 0;
+        let camera, camera1,
             controls,
             ball,
             fov, aspect, near, far;
         let clock, ready = false;
         let mouseDown = false;
-        let goal1,goal2;
+        let goal1, goal2;
 
-        let raycaster,collidableMeshList = [];
+        let raycaster, collidableMeshList = [];
         let shape, shapeGeometry;
         let player;
         let supervisor;
         let dome;
-        let Goal = function(x,y,z,r){
+        let Goal = function (x, y, z, r) {
             let model = this;
             this.ready = false;
             let loader = new THREE.GLTFLoader();
 
             loader.load('models/football_goal/scene.gltf', function (gltf) {
-                gltf.scene.traverse( function( node ) {
-                 if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
-               
-                } );
+                gltf.scene.traverse(function (node) {
+                    if (node instanceof THREE.Mesh) { node.castShadow = true; }
+
+                });
                 model.object = gltf.scene;
-                model.object.scale.set(0.05,0.05,0.05);
-                model.object.position.set(x,y,z);
+                model.object.scale.set(0.05, 0.05, 0.05);
+                model.object.position.set(x, y, z);
                 model.object.rotation.y = r;
                 collidableMeshList.push(model.object);
-                scene.add( model.object );
-//                collidableMeshList.push(model.object);
-                model.ready=true;
+                scene.add(model.object);
+                //                collidableMeshList.push(model.object);
+                model.ready = true;
                 console.log("goal ready");
                 console.log(gltf);
 
             });
         }
-        let Dome = function(){
+        let Dome = function () {
             let model = this;
             this.mesh = new THREE.Object3D();
-            this.ready=0;
-            this.np=5;
+            this.ready = 0;
+            this.np = 5;
             let loader;
-            loader = new THREE.MTLLoader();            
+            loader = new THREE.MTLLoader();
             loader.load('models/wooden-coffe-table/wooden_coffe_table.mtl', function (material) {
                 material.preload();
                 let tableLoader = new THREE.OBJLoader();
                 tableLoader.setMaterials(material);
-                
+
                 tableLoader.load('models/wooden-coffe-table/wooden_coffe_table.obj', function (object) {
                     object.scale.set(50, 50, 50);
                     object.traverse(function (node) {
-                        if (node instanceof THREE.Mesh) { node.castShadow = true; node.receiveShadow =true; }
+                        if (node instanceof THREE.Mesh) { node.castShadow = true; node.receiveShadow = true; }
                     });
                     model.mesh.add(object);
-                    model.ob1=object;
+                    model.ob1 = object;
                     model.ready++;
                     console.log("table ready");
                 });
-             });
+            });
 
-             loader = new THREE.GLTFLoader();
-             loader.load('models/vase/scene.gltf', function(gltf){
-                let object =gltf.scene; 
+            loader = new THREE.GLTFLoader();
+            loader.load('models/vase/scene.gltf', function (gltf) {
+                let object = gltf.scene;
                 object.traverse(function (node) {
-                       if (node instanceof THREE.Mesh) { 
-                            node.castShadow = true;
-                        }
-                    });
-                object.scale.set(5,5,5);
-                object.position.y +=78;
+                    if (node instanceof THREE.Mesh) {
+                        node.castShadow = true;
+                    }
+                });
+                object.scale.set(5, 5, 5);
+                object.position.y += 78;
                 object.position.x -= 80;
-                object.position.z -=30;
+                object.position.z -= 30;
 
-                 
+
                 model.mesh.add(object);
-                 model.vase=object;
-                 collidableMeshList.push(object);
-//                 console.log(object);
-                    model.ready++;
-                 console.log("vases ready");
-                 console.log(gltf);
+                model.vase = object;
+                collidableMeshList.push(object);
+                //                 console.log(object);
+                model.ready++;
+                console.log("vases ready");
+                console.log(gltf);
 
-             });
-             loader = new THREE.GLTFLoader();
-             loader.load('models/groot_dancing_2/scene.gltf',function(gltf){
-                 
-                let object=gltf.scene;
-           
-                 object.scale.set(0.1,0.1,0.1);
-                 object.position.set(1950,0,0);
-                 object.rotation.y=-Math.PI;
-                 
-                 model.groot = object;
-                 model.grootmixer=new THREE.AnimationMixer(object);
-                 
-                 model.grootaction = model.grootmixer.clipAction( gltf.animations[0] );
-                 model.grootaction.play();
-                 scene.add(object);
-                 model.ready++;
-//                 console.log(gltf)
-                 console.log("groot ready");
-             });
-             loader = new THREE.GLTFLoader();
-             loader.load('models/dancing_stormtrooper/scene.gltf',function(gltf){
-                 let object = gltf.scene;
-                 object.scale.set(30,30,30);
-                 object.position.set(-1950,0,0);
-                 object.rotation.y=Math.PI/2;
-                 
-                 model.trooper = object;
-                 model.troopermixer=new THREE.AnimationMixer(object);
-                 
-                 model.trooperaction = model.troopermixer.clipAction( gltf.animations[0] );
-                 model.trooperaction.play();
-                 scene.add(object);
-                 model.ready++;
-//                 console.log(gltf)
-                 console.log("trooper ready");
-                 console.log(gltf);
+            });
+            loader = new THREE.GLTFLoader();
+            loader.load('models/groot_dancing_2/scene.gltf', function (gltf) {
 
-             });
-             loader = new THREE.GLTFLoader();
-             loader.load('models/teapot/scene.gltf',function(gltf){
-              console.log("teapot",gltf);
-              let object =gltf.scene; 
+                let object = gltf.scene;
+
+                object.scale.set(0.1, 0.1, 0.1);
+                object.position.set(1950, 0, 0);
+                object.rotation.y = -Math.PI;
+
+                model.groot = object;
+                model.grootmixer = new THREE.AnimationMixer(object);
+
+                model.grootaction = model.grootmixer.clipAction(gltf.animations[0]);
+                model.grootaction.play();
+                scene.add(object);
+                model.ready++;
+                //                 console.log(gltf)
+                console.log("groot ready");
+            });
+            loader = new THREE.GLTFLoader();
+            loader.load('models/dancing_stormtrooper/scene.gltf', function (gltf) {
+                let object = gltf.scene;
+                object.scale.set(30, 30, 30);
+                object.position.set(-1950, 0, 0);
+                object.rotation.y = Math.PI / 2;
+
+                model.trooper = object;
+                model.troopermixer = new THREE.AnimationMixer(object);
+
+                model.trooperaction = model.troopermixer.clipAction(gltf.animations[0]);
+                model.trooperaction.play();
+                scene.add(object);
+                model.ready++;
+                //                 console.log(gltf)
+                console.log("trooper ready");
+                console.log(gltf);
+
+            });
+            loader = new THREE.GLTFLoader();
+            loader.load('models/teapot/scene.gltf', function (gltf) {
+                console.log("teapot", gltf);
+                let object = gltf.scene;
                 object.traverse(function (node) {
-                       if (node instanceof THREE.Mesh) { 
-                            node.castShadow = true;
-                        }
-                    });
-                 object.scale.set(0.1,0.1,0.1);
-                 object.position.y+=65;
-                 model.teapot = object;
-                 scene.add(object);
+                    if (node instanceof THREE.Mesh) {
+                        node.castShadow = true;
+                    }
+                });
+                object.scale.set(0.1, 0.1, 0.1);
+                object.position.y += 65;
+                model.teapot = object;
+                scene.add(object);
                 model.mesh.add(object);
 
-                 collidableMeshList.push(object);
-                 model.ready++;
-             })
-             this.mesh.position.set(60, 0, -850);
-             scene.add(this.mesh);
-             this.mesh.position.x+=100;
+                collidableMeshList.push(object);
+                model.ready++;
+            })
+            this.mesh.position.set(60, 0, -850);
+            scene.add(this.mesh);
+            this.mesh.position.x += 100;
             //console.log(model);
         }
-        let Ball = function(){
+        let Ball = function () {
             this.Speed = 1000.0;
-            this.RotationSpeed=Math.PI * 5;
+            this.RotationSpeed = Math.PI * 5;
             this.canshoot = 0; // 0 ball in ground
-            this.angle=0;
-                             // 1 space pressed
-                             // 2 ball in shooting
+            this.angle = 0;
+            // 1 space pressed
+            // 2 ball in shooting
             this.velocity = new THREE.Vector3();
             this.anglevelocity = 0;
-            
+
             let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
 
             let sphere = new THREE.SphereGeometry(10, 10, 30);
             let material1 = new THREE.MeshPhongMaterial({ map: ballTexture });
 
             this.object = new THREE.Mesh(sphere, material1);
-        //    console.log(this.object);
-            this.object.name="ball";
+            //    console.log(this.object);
+            this.object.name = "ball";
             this.object.castShadow = true;
             this.object.position.set(0, 15, 100);
 
             renderer.shadowMap.enabled = true;
             scene.add(this.object);
-//            collidableMeshList.push(this.object);
+            //            collidableMeshList.push(this.object);
 
-            this.isOut = function(){
+            this.isOut = function () {
                 let pos = this.object.position;
-                return pos.x>2060 || pos.x<-2060 || pos.z>1050 || pos.z<-1050 ; 
+                return pos.x > 2060 || pos.x < -2060 || pos.z > 1050 || pos.z < -1050;
             }
         }
-        let Robot = function(){
+        let Robot = function () {
             let model = this;
-            this.Speed=100.0;
-            this.fast  = false;
-            this.RotationSpeed=1.5;
+            this.Speed = 100.0;
+            this.fast = false;
+            this.RotationSpeed = 1.5;
             this.moveForward = false;
             this.moveBackward = false;
             this.moveLeft = false;
             this.moveRight = false;
 
-            this.angle=2;
+            this.angle = 2;
             this.velocity = new THREE.Vector3();
             this.anglevelocity = 0;
-            
-            this.mixer=null;
+
+            this.mixer = null;
             this.object = null;
-            this.activeAction=null;
-            this.previousAction=null;
-            this.ready=false;
-            let loader = new THREE.GLTFLoader();            
-            let states = [ 'Idle', 'Walking', 'Running', 'Dance', 'Death', 'Sitting', 'Standing','Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp' ];
+            this.activeAction = null;
+            this.previousAction = null;
+            this.ready = false;
+            let loader = new THREE.GLTFLoader();
+            let states = ['Idle', 'Walking', 'Running', 'Dance', 'Death', 'Sitting', 'Standing', 'Jump', 'Yes', 'No', 'Wave', 'Punch', 'ThumbsUp'];
             this.actions = {};
             loader.load('models/RobotExpressive/RobotExpressive.glb', function (gltf) {
-                gltf.scene.traverse( function( node ) {
-                 if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
-                } );
+                gltf.scene.traverse(function (node) {
+                    if (node instanceof THREE.Mesh) { node.castShadow = true; }
+                });
                 model.object = gltf.scene.children[0];
-              //  console.log(gltf);
+                //  console.log(gltf);
 
-                model.mixer = new THREE.AnimationMixer( model.object );
-                let animations=gltf.animations;
-				for ( let i = 0; i < animations.length; i++ ) {
-					let clip = animations[ i ];
-					let action = model.mixer.clipAction( clip );
-					model.actions[ clip.name ] = action;
-					if ( states.indexOf( clip.name ) >= 4 ) {
-							action.clampWhenFinished = true;
-							action.loop = THREE.LoopOnce;
-					}
-				}
+                model.mixer = new THREE.AnimationMixer(model.object);
+                let animations = gltf.animations;
+                for (let i = 0; i < animations.length; i++) {
+                    let clip = animations[i];
+                    let action = model.mixer.clipAction(clip);
+                    model.actions[clip.name] = action;
+                    if (states.indexOf(clip.name) >= 4) {
+                        action.clampWhenFinished = true;
+                        action.loop = THREE.LoopOnce;
+                    }
+                }
                 model.previousAction = model.actions['Idle'];
                 model.activeAction = model.actions['Idle'];
                 model.activeAction.play();
-                model.object.scale.set(15,15,15);
-                model.object.position.set(-50,0,100);
-                model.object.rotation.set(0,model.angle,0);
-                scene.add( model.object );
-//                collidableMeshList.push(model.object);
-                model.ready=true;
+                model.object.scale.set(15, 15, 15);
+                model.object.position.set(-50, 0, 100);
+                model.object.rotation.set(0, model.angle, 0);
+                scene.add(model.object);
+                //                collidableMeshList.push(model.object);
+                model.ready = true;
                 console.log("robot ready");
             });
-              
-            this.fadeToAction = function( name, duration ) {
-				this.activeAction = this.actions[ name ];
-				if (this.previousAction !== this.activeAction ) {
-					this.previousAction.fadeOut( duration ).stop();
+
+            this.fadeToAction = function (name, duration) {
+                this.activeAction = this.actions[name];
+                if (this.previousAction !== this.activeAction) {
+                    this.previousAction.fadeOut(duration).stop();
                     this.activeAction
                         .reset()
-                        .setEffectiveTimeScale( 1 )
-                        .setEffectiveWeight( 1 )
-                        .fadeIn( duration )
+                        .setEffectiveTimeScale(1)
+                        .setEffectiveWeight(1)
+                        .fadeIn(duration)
                         .play();
-				}
-				this.previousAction = this.activeAction;
-			}
+                }
+                this.previousAction = this.activeAction;
+            }
         }
-        let human = function(){
-            let model=this;
+        let human = function () {
+            let model = this;
             this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            this.camera.position.set(0,100,-950);
-            this.camera.lookAt(new THREE.Vector3(0,0,0));
+            this.camera.position.set(0, 100, -950);
+            this.camera.lookAt(new THREE.Vector3(0, 0, 0));
             let loader = new THREE.GLTFLoader();
-            this.object=null;
-            this.ready=false;
-            loader.load('models/Human/Animated Human.glb',function (gltf){
-                gltf.scene.traverse( function( node ) {
-                    if ( node instanceof THREE.Mesh ) { node.castShadow = true; }
-                } );
+            this.object = null;
+            this.ready = false;
+            loader.load('models/Human/Animated Human.glb', function (gltf) {
+                gltf.scene.traverse(function (node) {
+                    if (node instanceof THREE.Mesh) { node.castShadow = true; }
+                });
                 model.object = gltf.scene.children[0].children[0];
-                model.object.material=new THREE.MeshPhongMaterial({color:0x525252})
+                model.object.material = new THREE.MeshPhongMaterial({ color: 0x525252 })
                 model.object.scale.set(30, 30, 30);
                 model.object.position.set(100, 0, -800);
                 scene.add(model.object);
                 collidableMeshList.push(model.object);
-              //  console.log(gltf);
-                model.ready=true;
+                //  console.log(gltf);
+                model.ready = true;
                 console.log("human ready");
             });
         }
-        let directlight = function(x,y,z){
+        let directlight = function (x, y, z) {
             this.object = new THREE.DirectionalLight(0xcfcbcf, 1);
             this.object.castShadow = true;
             const d = 700;
@@ -350,39 +356,39 @@
 
             this.object.shadow.mapSize.width = 1024;
             this.object.shadow.mapSize.height = 1024;
-            this.object.position.set(x,y,z);
+            this.object.position.set(x, y, z);
 
             scene.add(this.object);
         }
-        let Plane = function(x,y){
+        let Plane = function (x, y) {
             // A mesh is created from the geometry and material, then added to the scene
             this.groundTexture = new THREE.TextureLoader().load('img/grasslight-big.jpg');
             this.groundTexture.wrapS = this.groundTexture.wrapT = THREE.RepeatWrapping;
             this.groundTexture.repeat.set(32, 32);
             this.groundTexture.anisotropy = 16;
             this.object = new THREE.Mesh(
-                new THREE.PlaneGeometry(x,y),
+                new THREE.PlaneGeometry(x, y),
                 new THREE.MeshPhongMaterial({
-                    map : this.groundTexture,
+                    map: this.groundTexture,
                 })
             );
             this.object.rotateX(-Math.PI / 2);
             this.object.receiveShadow = true;
             this.object.castShadow = true;
         }
-        let Wall = function(x,y,z){
-            this.Geometry = new THREE.BoxGeometry(x,y,z);
+        let Wall = function (x, y, z) {
+            this.Geometry = new THREE.BoxGeometry(x, y, z);
             let texture1 = new THREE.TextureLoader().load('img/footballwall.jpg');
             texture1.wrapS = texture1.wrapT = THREE.RepeatWrapping;
-            texture1.repeat.set(15,1);
+            texture1.repeat.set(15, 1);
             texture1.anisotropy = 16;
             let texture2 = new THREE.TextureLoader().load('img/footballwall.jpg');
             texture2.wrapS = texture2.wrapT = THREE.RepeatWrapping;
-            texture2.repeat.set(8,1);
+            texture2.repeat.set(8, 1);
             texture2.anisotropy = 16;
-            let material1 = new THREE.MeshBasicMaterial({ map: texture1, side: THREE.DoubleSide});
-            let material2 = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0});
-            let material3 = new THREE.MeshBasicMaterial({ map: texture2, side: THREE.DoubleSide});
+            let material1 = new THREE.MeshBasicMaterial({ map: texture1, side: THREE.DoubleSide });
+            let material2 = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+            let material3 = new THREE.MeshBasicMaterial({ map: texture2, side: THREE.DoubleSide });
             this.Material =
                 [
                     material3,// left
@@ -393,35 +399,35 @@
                     material2 // back
                 ]
 
-            this.object = new THREE.Mesh(this.Geometry,this.Material);
+            this.object = new THREE.Mesh(this.Geometry, this.Material);
             this.object.receiveShadow = true;
-        //            this.object.castShadow = true;
-            this.object.position.y = y/2;
-            this.object.position.y -=25;
+            //            this.object.castShadow = true;
+            this.object.position.y = y / 2;
+            this.object.position.y -= 25;
         }
-        let Fence = function(x,y,z){
-            this.Geometry = new THREE.BoxGeometry(x,y,z);
+        let Fence = function (x, y, z) {
+            this.Geometry = new THREE.BoxGeometry(x, y, z);
             this.Material = new THREE.MeshPhysicalMaterial({
                 transparent: true,
                 opacity: 0.5,
                 color: 0x0097e6,
             });
-            this.object = new THREE.Mesh(this.Geometry,this.Material);
+            this.object = new THREE.Mesh(this.Geometry, this.Material);
             this.object.castShadow = true;
-            this.object.position.y = y/2;
+            this.object.position.y = y / 2;
             this.object.position.z = -700.0;
 
         }
-        let View  = function(){
+        let View = function () {
             this.model = new THREE.Object3D();
 
-            this.plane = new Plane(1024*4,1024*2);
+            this.plane = new Plane(1024 * 4, 1024 * 2);
             this.model.add(this.plane.object);
 
-            this.wall = new Wall(1024*4,512,1024*2);
+            this.wall = new Wall(1024 * 4, 512, 1024 * 2);
             this.model.add(this.wall.object);
             collidableMeshList.push(this.wall.object);
-            this.fence = new Fence(512 +256,256,4);
+            this.fence = new Fence(512 + 256, 256, 4);
             this.model.add(this.fence.object);
             collidableMeshList.push(this.fence.object);
             scene.add(this.model);
@@ -438,10 +444,10 @@
             far = 4000;
             scene = new THREE.Scene();
             camera1 = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            camera1.position.set(-350,150,250);
-            camera1.lookAt(new THREE.Vector3(0,0,0));
+            camera1.position.set(-350, 150, 250);
+            camera1.lookAt(new THREE.Vector3(0, 0, 0));
 
-            camera=camera1;
+            camera = camera1;
 
             //controls = new THREE.PointerLockControls( camera );
 
@@ -453,21 +459,33 @@
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.addEventListener('change', function () { renderer.render(scene, camera); });
-            controls.enableDamping=true;
-            controls.keyPanSpeed=10;
-            controls.panSpeed=10;
-            controls.rotateSpeed=1;
-            controls.zoomSpeed=3;
+            controls.enableDamping = true;
+            controls.keyPanSpeed = 10;
+            controls.panSpeed = 10;
+            controls.rotateSpeed = 1;
+            controls.zoomSpeed = 3;
+
+            var listener = new THREE.AudioListener();
+            camera.add(listener);
+            var sound = new THREE.Audio(listener);
+            var audioLoader = new THREE.AudioLoader();
+            audioLoader.load('sounds/audio.mp3', function (buffer) {
+                sound.setBuffer(buffer);
+                sound.setLoop(true);
+                sound.setVolume(0.5);
+                sound.play();
+            });
+
             initview();
             Loadcharcters();
             lighting();
             ball = new Ball();
-            goal1 = new Goal(2000,0,0,0);
-            goal2 = new Goal(-2000,0,0,Math.PI);
+            goal1 = new Goal(2000, 0, 0, 0);
+            goal2 = new Goal(-2000, 0, 0, Math.PI);
 
             initSky();
-            dome =new Dome();
-            
+            dome = new Dome();
+
             window.addEventListener('resize', onWindowResize, false);
             document.addEventListener('keydown', onKeyDown, false);
             document.addEventListener('keyup', onKeyUp, false);
@@ -476,7 +494,7 @@
             document.addEventListener('keypress', onKeyPress, false);
             clock = new THREE.Clock();
         }
-        function initview(){
+        function initview() {
             view = new View();
         }
         function initSky() {
@@ -519,12 +537,12 @@
                 sunSphere.position.y = distance * Math.sin(phi) * Math.sin(theta);
                 sunSphere.position.z = distance * Math.sin(phi) * Math.cos(theta);
                 sunSphere.rotation.y += 50;
-                sunSphere.visible=effectController.sun;
-                if(effectController.supervisorView){
-                    camera=supervisor.camera;
+                sunSphere.visible = effectController.sun;
+                if (effectController.supervisorView) {
+                    camera = supervisor.camera;
                 }
-                else{
-                    camera=camera1;
+                else {
+                    camera = camera1;
                 }
                 uniforms.sunPosition.value.copy(sunSphere.position);
                 renderer.render(scene, camera);
@@ -543,16 +561,16 @@
         }
 
         function lighting() {
-            let x=1024;
-            let y=200;
-            let z=512;
+            let x = 1024;
+            let y = 200;
+            let z = 512;
 
             let Directlight1 = new directlight(-x, y, -z);
-            let Directlight2 = new directlight( x, y, -z);
-            let Directlight3 = new directlight(-x, y,  z);
-            let Directlight4 = new directlight( x, y,  z);
+            let Directlight2 = new directlight(x, y, -z);
+            let Directlight3 = new directlight(-x, y, z);
+            let Directlight4 = new directlight(x, y, z);
             scene.add(new THREE.HemisphereLight(0xffff0b, 0x080820, 0.5));
-//            scene.add(new THREE.AmbientLight(0xa59f75, 0.6));
+            //            scene.add(new THREE.AmbientLight(0xa59f75, 0.6));
         }
         function Loadcharcters() {
             player = new Robot();
@@ -570,17 +588,17 @@
             camera.updateProjectionMatrix();
         }
 
-        function handlemoves(){
-            if(! ready) return;
-            let playermove=player.moveBackward || player.moveForward || player.moveLeft ||player.moveRight;
-            if(playermove){
-                if(player.fast)
-                    player.fadeToAction('Running',0.2);
+        function handlemoves() {
+            if (!ready) return;
+            let playermove = player.moveBackward || player.moveForward || player.moveLeft || player.moveRight;
+            if (playermove) {
+                if (player.fast)
+                    player.fadeToAction('Running', 0.2);
                 else
-                    player.fadeToAction('Walking',0.2);
+                    player.fadeToAction('Walking', 0.2);
             }
-            else{
-                player.fadeToAction('Idle',0.2);
+            else {
+                player.fadeToAction('Idle', 0.2);
             }
         }
         function onKeyDown(event) {
@@ -600,13 +618,13 @@
                     player.moveRight = true;
                     break;
                 case keyspeed:
-                    if(! player.fast){
-                        player.fast=true;
-                        player.Speed*=3;
+                    if (!player.fast) {
+                        player.fast = true;
+                        player.Speed *= 3;
                     }
                     break;
                 case 32: // space
-                    if(ball.canshoot == 0)
+                    if (ball.canshoot == 0)
                         ball.canshoot = 1;
                     break;
             }
@@ -620,23 +638,23 @@
                     player.moveForward = false;
                     break;
 
-//						case 37: // left
+                //						case 37: // left
                 case keyleft: // a
                     player.moveLeft = false;
                     break;
 
-//						case 40: // down
+                //						case 40: // down
                 case keydown: // s
                     player.moveBackward = false;
                     break;
-//						case 39: // right
+                //						case 39: // right
                 case keyright: // d
                     player.moveRight = false;
                     break;
                 case keyspeed:
-                    if(player.fast){
-                        player.fast=false;
-                        player.Speed/=3;
+                    if (player.fast) {
+                        player.fast = false;
+                        player.Speed /= 3;
                     }
                     break;
 
@@ -646,8 +664,8 @@
             handlemoves();
         };
 
-        function onKeyPress(event){
-            switch(event.keyCode){
+        function onKeyPress(event) {
+            switch (event.keyCode) {
                 case 32: // space
                     break;
             }
@@ -663,11 +681,11 @@
             mouseDown = false;
 
         }
-        function addbetween(before,change,min,max){
-            return Math.min(max ,Math.max(min ,before + change));
+        function addbetween(before, change, min, max) {
+            return Math.min(max, Math.max(min, before + change));
         }
-        function updatecharachter(){
-            player.mixer.update( delta );
+        function updatecharachter() {
+            player.mixer.update(delta);
             dome.grootmixer.update(delta);
             dome.troopermixer.update(delta);
 
@@ -676,128 +694,128 @@
             player.velocity.y -= 9.8 * 30.0 * delta;
             player.anglevelocity -= player.anglevelocity * 20 * delta;
 
-            let rotationsign = Number( player.moveLeft ) - Number( player.moveRight) ;
-            let directionsign =  Number( player.moveForward ) - Number( player.moveBackward );
+            let rotationsign = Number(player.moveLeft) - Number(player.moveRight);
+            let directionsign = Number(player.moveForward) - Number(player.moveBackward);
 
             player.anglevelocity += rotationsign * player.RotationSpeed * delta;
-            player.angle+=player.anglevelocity;
+            player.angle += player.anglevelocity;
 
-            player.velocity.x += directionsign * player.Speed * Math.sin(player.angle) * delta ;
-            player.velocity.z += directionsign * player.Speed * Math.cos(player.angle) * delta ;
-            if(player.ccanfly)
-                player.velocity.y += player.Speed * delta ;
-            player.object.position.x+=player.velocity.x;
-            player.object.position.z+=player.velocity.z;
+            player.velocity.x += directionsign * player.Speed * Math.sin(player.angle) * delta;
+            player.velocity.z += directionsign * player.Speed * Math.cos(player.angle) * delta;
+            if (player.ccanfly)
+                player.velocity.y += player.Speed * delta;
+            player.object.position.x += player.velocity.x;
+            player.object.position.z += player.velocity.z;
 
-            player.object.position.y=addbetween(player.object.position.y,player.velocity.y,0,512 - 25);
-            if(player.object.position.y<=0){
-                player.object.position.y=0;
-                player.velocity.y=0;
+            player.object.position.y = addbetween(player.object.position.y, player.velocity.y, 0, 512 - 25);
+            if (player.object.position.y <= 0) {
+                player.object.position.y = 0;
+                player.velocity.y = 0;
             }
 
-            player.object.rotation.y = ( player.angle );
+            player.object.rotation.y = (player.angle);
             supervisor.camera.position.x = -1 * player.object.position.x * 0.1;
-            if(collisitions(player.object)){
-                player.object.position.x-=player.velocity.x;
-                player.object.position.z-=player.velocity.z;
+            if (collisitions(player.object)) {
+                player.object.position.x -= player.velocity.x;
+                player.object.position.z -= player.velocity.z;
             }
-         }
-        function dist(vertex1,vertex2){
-            return Math.sqrt((vertex1.x-vertex2.x)**2 + (vertex1.y-vertex2.y)**2 +(vertex1.z-vertex2.z)**2);
         }
-        function coll1(ray,object){
-            var collisionResults = ray.intersectObjects( collidableMeshList ,true);
-    //                console.log(collisionResults);
-            for(let i=0;i<collisionResults.length;i++){
+        function dist(vertex1, vertex2) {
+            return Math.sqrt((vertex1.x - vertex2.x) ** 2 + (vertex1.y - vertex2.y) ** 2 + (vertex1.z - vertex2.z) ** 2);
+        }
+        function coll1(ray, object) {
+            var collisionResults = ray.intersectObjects(collidableMeshList, true);
+            //                console.log(collisionResults);
+            for (let i = 0; i < collisionResults.length; i++) {
                 let node = collisionResults[i];
-                if(node.object === object)continue;
+                if (node.object === object) continue;
                 if (node.distance < 20) {
                     //collision occurs
-    //                        console.log("x ",ball.object.position.x);
-    //                        console.log("z ",ball.object.position.z);
-                           // console.log(object,node);
+                    //                        console.log("x ",ball.object.position.x);
+                    //                        console.log("z ",ball.object.position.z);
+                    // console.log(object,node);
                     //  return;
                     // break;  
                     return 1;
-                }   
+                }
             }
             return 0;
         }
-        function collisitions(object){
-//            console.log(scene,object);
+        function collisitions(object) {
+            //            console.log(scene,object);
             var originPoint = object.position.clone();
-            var dx=[0, 0,   0, 0,   1,-1,   0, 0,0, 0,    1,-1,1,-1,     1,-1,1,-1,     1, 1,1, 1,    1,-1,1,-1,     1,-1,1,-1,     -1, -1,-1,-1,    1,-1,1,-1,     1,-1,1,-1,];
-            var dy=[0, 0,   1,-1,   0, 0,   1,-1,1,-1,    0, 0,0, 0,    -1, 1,1,-1,     1,-1,1,-1,    1, 1,1, 1,    -1, 1,1,-1,     1,-1,1,-1,    -1, -1,-1, -1,    -1, 1,1,-1,];
-            var dz=[1,-1,   0, 0,   0, 0,   -1,1,1,-1,   -1, 1,1,-1,     0, 0,0, 0,     -1,1,1,-1,   -1, 1,1,-1,     1, 1,1, 1,     -1,1,1,-1,   -1, 1,1,-1,     -1, -1,-1,-1,];
+            var dx = [0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 1, -1, 1, -1, 1, -1, 1, -1, 1, 1, 1, 1, 1, -1, 1, -1, 1, -1, 1, -1, -1, -1, -1, -1, 1, -1, 1, -1, 1, -1, 1, -1,];
+            var dy = [0, 0, 1, -1, 0, 0, 1, -1, 1, -1, 0, 0, 0, 0, -1, 1, 1, -1, 1, -1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, 1, -1,];
+            var dz = [1, -1, 0, 0, 0, 0, -1, 1, 1, -1, -1, 1, 1, -1, 0, 0, 0, 0, -1, 1, 1, -1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, -1, -1, -1, -1,];
             // console.log("Thhhhhhhhhhhhhhh",ball);
-            for(let i=0;i<dx.length;i++){
-                ray = new THREE.Raycaster( originPoint, new THREE.Vector3( dx[i] , dy[i],  dz[i] ));
-                if(coll1(ray,object))return 1;
+            for (let i = 0; i < dx.length; i++) {
+                ray = new THREE.Raycaster(originPoint, new THREE.Vector3(dx[i], dy[i], dz[i]));
+                if (coll1(ray, object)) return 1;
             }
             return 0;
         }
-        function updateball(){
+        function updateball() {
             ball.velocity.x -= ball.velocity.x * 2.0 * delta;
             ball.velocity.z -= ball.velocity.z * 2.0 * delta;
             ball.velocity.y -= 12.8 * 4.0 * delta;
             ball.anglevelocity -= ball.anglevelocity * 1.2 * delta;
-            if(ball.canshoot == 1
-            && dist(ball.object.position,player.object.position) <=50){
-                
-                ball.angle = player.angle;
-                ball.anglevelocity +=ball.RotationSpeed * delta;
+            if (ball.canshoot == 1
+                && dist(ball.object.position, player.object.position) <= 50) {
 
-                ball.velocity.x += ball.Speed * delta ;
-                ball.velocity.z += ball.Speed * delta ;
-                ball.velocity.y += ball.Speed *0.8 * delta;
+                ball.angle = player.angle;
+                ball.anglevelocity += ball.RotationSpeed * delta;
+
+                ball.velocity.x += ball.Speed * delta;
+                ball.velocity.z += ball.Speed * delta;
+                ball.velocity.y += ball.Speed * 0.8 * delta;
             }
-            if(ball.canshoot==1)ball.canshoot=0;
-            
-            ball.object.position.x+=ball.velocity.x* Math.sin(ball.angle);
-            ball.object.position.y+=ball.velocity.y;
-            ball.object.position.z+=ball.velocity.z * Math.cos(ball.angle);
-            
-            ball.object.rotation.x+=ball.anglevelocity;
-            ball.object.rotation.z+=ball.anglevelocity;
-            if(ball.canshoot!=1){
-                if(Math.abs(ball.velocity.x)<= eps
-                && Math.abs(ball.velocity.z)<= eps
-                ){
-                    ball.canshoot=0;
-                    ball.object.position.y=10;
+            if (ball.canshoot == 1) ball.canshoot = 0;
+
+            ball.object.position.x += ball.velocity.x * Math.sin(ball.angle);
+            ball.object.position.y += ball.velocity.y;
+            ball.object.position.z += ball.velocity.z * Math.cos(ball.angle);
+
+            ball.object.rotation.x += ball.anglevelocity;
+            ball.object.rotation.z += ball.anglevelocity;
+            if (ball.canshoot != 1) {
+                if (Math.abs(ball.velocity.x) <= eps
+                    && Math.abs(ball.velocity.z) <= eps
+                ) {
+                    ball.canshoot = 0;
+                    ball.object.position.y = 10;
                 }
-                if(collisitions(ball.object)){
-                    ball.object.position.x-=ball.velocity.x;
-                    ball.object.position.z-=ball.velocity.z;
+                if (collisitions(ball.object)) {
+                    ball.object.position.x -= ball.velocity.x;
+                    ball.object.position.z -= ball.velocity.z;
                     console.log(ball.angle);
-                    ball.angle+=Math.PI;
+                    ball.angle += Math.PI;
                     console.log(ball.angle);
-                    ball.object.position.x+=ball.velocity.x* Math.sin(ball.angle);
-                    ball.object.position.z+=ball.velocity.z * Math.cos(ball.angle);
+                    ball.object.position.x += ball.velocity.x * Math.sin(ball.angle);
+                    ball.object.position.z += ball.velocity.z * Math.cos(ball.angle);
                 }
             }
-            if(ball.object.position.y<=10){
-                ball.velocity.y = Math.max(0,ball.velocity.y);
-                ball.object.position.y =10;
+            if (ball.object.position.y <= 10) {
+                ball.velocity.y = Math.max(0, ball.velocity.y);
+                ball.object.position.y = 10;
             }
-            if(ball.isOut()){
+            if (ball.isOut()) {
                 console.log("out");
-                ball.object.position.x=player.object.position.x;
-                ball.object.position.z=player.object.position.z;                
-                ball.canshoot=0;
+                ball.object.position.x = player.object.position.x;
+                ball.object.position.z = player.object.position.z;
+                ball.canshoot = 0;
             }
         }
         function animate() {
             requestAnimationFrame(animate);
-            delta = clock.getDelta() ;
+            delta = clock.getDelta();
             if (ready) {
                 update();
                 render();
             }
-            else{
-                ready=player.ready && supervisor.ready && dome.ready==dome.np;
+            else {
+                ready = player.ready && supervisor.ready && dome.ready == dome.np;
                 console.log(ready);
-                if(ready){
+                if (ready) {
                     setTimeout(preloader, 2600);
                 }
             }
@@ -806,9 +824,9 @@
             updatecharachter();
             updateball();
             camera.lookAt(player.object.position);
-//            controls.update();
+            //            controls.update();
             supervisor.object.lookAt(player.object.position);
-dome.groot.lookAt(ball.object.position);
+            dome.groot.lookAt(ball.object.position);
         }
         function render() {
             renderer.render(scene, camera);

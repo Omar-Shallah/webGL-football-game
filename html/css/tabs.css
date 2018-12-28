@@ -18,9 +18,6 @@
   .active, .accordion:hover {
     background-color: rgba(153, 63, 76,0.2);
   }
-  button { 
-      
-  }
   button:focus { 
       outline: 5px auto #653f4c;
   }
@@ -31,10 +28,16 @@
     float: left;
     margin-left: 5px;
   }
+  .noafter:after { 
+      content: '';
+  }
   
-  .active:after {
+  /* .active:after {
     content: "\2212";
   }
+  .noafter:active:after { 
+      content: '';
+  } */
   
   .panel {
     padding: 0 18px;

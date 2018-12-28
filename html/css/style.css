@@ -5,7 +5,6 @@ body {
     font-family:'Cairo', sans-serif !important;
     background: #ebe5e7;
     height:100%;
-    overflow: hidden;
 }
 #world {
   background: #ebe5e7;
@@ -82,7 +81,7 @@ body {
   color: #653f4c;
 }
 #birds { 
-  height: 500px;
+  height: 350px;
   margin: 0 auto;   
 }
 canvas { 
@@ -115,6 +114,7 @@ text-align: center;
 }
 .col-title { 
   margin: 0 1.5rem;
+  font-size: 1.1rem;
   text-align: right;
   padding: 1rem;
   border-bottom: 2px solid #653f4c;
