@@ -115,7 +115,7 @@
             let model = this;
             this.mesh = new THREE.Object3D();
             this.ready=0;
-            this.np=4;
+            this.np=5;
             let loader;
             loader = new THREE.MTLLoader();            
             loader.load('models/wooden-coffe-table/wooden_coffe_table.mtl', function (material) {
@@ -196,18 +196,25 @@
                  console.log(gltf);
 
              });
-            //  loader = new THREE.GLTFLoader();
-            //  loader.load('models/teapot/scene.gltf',function(gltf){
-            //   console.log("teapot",gltf);
-            //     let object = gltf.scene;
-            //      object.scale.set(0.01,0.01,0.01);
-            //      object.position.set(0,0,-750);
-            //      model.ob4 = object;
-            //      scene.add(object);
-            //      collidableMeshList.push(object);
-            //      model.ready++;
-            //  })
-             this.mesh.position.set(20, 0, -850);
+             loader = new THREE.GLTFLoader();
+             loader.load('models/teapot/scene.gltf',function(gltf){
+              console.log("teapot",gltf);
+              let object =gltf.scene; 
+                object.traverse(function (node) {
+                       if (node instanceof THREE.Mesh) { 
+                            node.castShadow = true;
+                        }
+                    });
+                 object.scale.set(0.1,0.1,0.1);
+                 object.position.y+=65;
+                 model.teapot = object;
+                 scene.add(object);
+                model.mesh.add(object);
+
+                 collidableMeshList.push(object);
+                 model.ready++;
+             })
+             this.mesh.position.set(60, 0, -850);
              scene.add(this.mesh);
              this.mesh.position.x+=100;
             //console.log(model);
