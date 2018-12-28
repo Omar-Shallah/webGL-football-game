@@ -275,11 +275,12 @@ Lion = function(){
   this.body = new THREE.Mesh(bodyGeom, this.yellowMat);
   this.body.position.z = -60;
   this.body.position.y = -30;
-  this.bodyVertices = [0,1,2,3,4,9];
+  this.bodyVertices = [0,1,2,3,4,10];
+  
   for (var i=0;i<this.bodyVertices.length; i++){
-    let tv = this.body.geometry.vertices[this.bodyVertices[i]];
-     tv.z =70;
-     // tv.x = 0;
+    var tv = this.body.geometry.vertices[this.bodyVertices[i]];
+    tv.z =70;
+    //tv.x = 0;
     this.bodyInitPositions.push({x:tv.x, y:tv.y, z:tv.z});
   }
   

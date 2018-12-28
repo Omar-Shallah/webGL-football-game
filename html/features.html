@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+
+<head>
+        <link rel="stylesheet" href="css/style.css" type="text/css" />
+        <link rel="stylesheet" href="css/bootstrap.css" type="text/css" />
+        <link rel="stylesheet" href="css/fontawesome.css" type="text/css" />   
+        <link rel="stylesheet" href="css/tabs.css" type="text/css" /> 
+</head>
+
+<body>
+    <div id="world">
+    <div class="innertitle"><h1>سبب اختيار ال WebGl</h1></div>
+        <div class="tabs">
+             <button class="accordion">مستقلة عن البيئة</button>
+            <div class="panel">
+              <p>تعمل بيئة ال webgl على البراوزر وبالتالي يمكن تشغيلها من أي متصفح سواء كان حاسب شخصي او حاسب محمول او حتى جميع الاجهزة المحمولة وبدون مشاكل </p>
+              <p>أما بنية ال opengl فيختلف اصدار ال exe عن اصدارات باقي النظمة التشغيل ولا يعمل عليها . حتى نظام التشغيل بحد ذاته لا يعمل فيه نسخة 64 على جهاز 32</p>
+              <p>وبما أنه ال webgl تعمل على المتصفحات فيمكن تضمين مبادئ الغرافيكس وانشاء مشروع صغير او مقطع صغير ضمن صفحة موقع دون الحاجة لانشاء ملف exe كامل منفصل </p> 
+            </div>
+            
+            <button class="accordion">سهولة تضمين المكاتب</button>
+            <div class="panel">
+             <p> ببساطة: لتضمين أي مكتبة : يكفي تنزيلها وإضافة script إلى ملف ال html وحينها تعمل المكتبة </p>
+             <p>تم تلافي جميع المشاكل والمعاناة التي نواجهها في ال opengl من تضمنين للمكاتب وعدم عملها بنجاح ناهيك عن المشاكل التي تحدث عند نقل المشروع من حاسب إلى آخر أو من منصة عمل "كالفجيوال" إلى أخرى </p>
+            </div>
+            
+            <button class="accordion">سهولة التعامل مع اللغة</button>
+            <div class="panel">
+              <p>لرسم مكعب أو إضافة أي شيء إلى الواجهة بال opengl تحتاج لانشاء مصفوفة تحوي جميع نقاط المكعب والكثير من التعليمات الاضافية المعثدة التي لا داعي لها ويمكن اختصارها</p>
+              <p>وهذا ما قامت به webgl عن طريق المكاتب التي وفرتها فتستطيع ببساطة انشاء مكعب عن طريق تعيلمات بسيطة جداً مقارنة بباقي اللغات</p>
+            </div>
+        </div>
+    <div id="nav">
+        <a href="index.html">الصفحة الرئيسية</a>
+    </div>
+    <div id="birds"></div>
+    <script src="js/three.min.js"></script>
+    <script src="js/tweenmax.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/birds.js"></script>
+</div>
+
+<script>
+        var acc = document.getElementsByClassName("accordion");
+        var i;
+        
+        for (i = 0; i < acc.length; i++) {
+          acc[i].addEventListener("click", function() {
+            this.classList.toggle("active");
+            var panel = this.nextElementSibling;
+            if (panel.style.maxHeight){
+              panel.style.maxHeight = null;
+            } else {
+              panel.style.maxHeight = panel.scrollHeight + "px";
+            } 
+          });
+        }
+        </script>
+</body>
+
+</html>
