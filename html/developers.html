@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+
+<head>
+    <link rel="stylesheet" href="css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="css/devbase.css" />
+    <link rel="stylesheet" href="css/style.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="css/dev.css" />
+
+</head>
+
+<body class="dev">
+    <main>
+        <div class="content">
+            <canvas class="scene scene--full" id="scene"></canvas>
+            <script type="x-shader/x-vertex" id="wrapVertexShader">
+                #define PI 3.1415926535897932384626433832795
+					attribute float size;
+					void main() {
+						vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+						gl_PointSize = 3.0;
+						gl_Position = projectionMatrix * mvPosition;
+					}
+				</script>
+            <script type="x-shader/x-fragment" id="wrapFragmentShader">
+                uniform sampler2D texture;
+					void main(){
+						vec4 textureColor = texture2D( texture, gl_PointCoord );
+						if ( textureColor.a < 0.3 ) discard;
+						vec4 dotColor = vec4(0.06, 0.18, 0.36, 0.4);
+						vec4 color = dotColor * textureColor;
+						gl_FragColor = color;
+					}
+				</script>
+            <div class="c">
+                <div class="container-fluid" dir="ltr">
+                    <div class="row">
+
+                        <div class="card c1 col-md-4">
+                            <div class="card_Banner">
+                                <div class="card_Avatar"></div>
+                            </div>
+                            <h3>Riad Alnajjar</h3>
+                            <a href="mailto:riad.16.10@hotmail.com">📧 riad.16.10@hotmail.com</a>
+                            <a>📱 +963955529161</a>
+                            <ul>
+                                <a href="https://www.linkedin.com/in/riad-al-najjar-53b267133/" target="_blank"><i class="fa fa-linkedin" style="font-size:22px"></i></a>
+                                <a href="https://www.twitter.com/" target="_blank"><i class="fa fa-facebook" style="font-size:22px"></i></a>
+                                <a href="https://www.codepen.io/" target="_blank"><i class="fa fa-codepen" style="font-size:22px"></i></a>
+                                <a href="https://www.instagram.com/" target="_blank"><i class="fa fa-instagram" style="font-size:22px"></i></a>
+                            </ul>
+                        </div>
+
+                        <div class="card c2 col-md-4">
+                            <div class="card_Banner">
+                                <div class="card_Avatar"></div>
+                            </div>
+                            <h3>Ammar Alhelali</h3>
+                            <a href="mailto:riad.16.10@hotmail.com">📧 ammar0ah@gmail.com</a>
+                            <a>📱 +963988204936</a>
+                            <ul>
+                                <a href="https://www.linkedin.com/in/ammar-al-helali-968803146/" target="_blank"><i class="fa fa-linkedin" style="font-size:22px"></i></a>
+                                <a href="https://www.twitter.com/" target="_blank"><i class="fa fa-facebook" style="font-size:22px"></i></a>
+                                <a href="https://www.dribbble.com/" target="_blank"><i class="fa fa-dribbble" style="font-size:22px"></i></a>
+                                <a href="https://www.codepen.io/" target="_blank"><i class="fa fa-codepen" style="font-size:22px"></i></a>
+                                <a href="https://www.instagram.com/" target="_blank"><i class="fa fa-instagram" style="font-size:22px"></i></a>
+                            </ul>
+                        </div>
+
+                        <div class="card c3 col-md-4">
+                            <div class="card_Banner">
+                                <div class="card_Avatar"></div>
+                            </div>
+                            <h3>kareem dabbeet</h3>
+                            <a href="mailto:riad.16.10@hotmail.com">📧 riad.16.10@hotmail.com</a>
+                            <a>📱 +1 123-456-7890</a>
+                            <ul>
+                                <a href="https://www.linkedin.com/in/kareemda" target="_blank"><i class="fa fa-linkedin" style="font-size:22px"></i></a>
+                                <a href="https://www.twitter.com/" target="_blank"><i class="fa fa-twitter" style="font-size:22px"></i></a>
+                                <a href="https://www.dribbble.com/" target="_blank"><i class="fa fa-dribbble" style="font-size:22px"></i></a>
+                                <a href="https://www.codepen.io/" target="_blank"><i class="fa fa-codepen" style="font-size:22px"></i></a>
+                                <a href="https://www.instagram.com/" target="_blank"><i class="fa fa-instagram" style="font-size:22px"></i></a>
+                            </ul>
+                        </div>
+                        <div class="card c4 col-md-4">
+                            <div class="card_Banner">
+                                <div class="card_Avatar"></div>
+                            </div>
+                            <h3>Riad Alnajjar</h3>
+                            <a href="mailto:riad.16.10@hotmail.com">📧 riad.16.10@hotmail.com</a>
+                            <a>📱 +1 123-456-7890</a>
+                            <ul>
+                                <a href="https://www.linkedin.com/in/" target="_blank"><i class="fa fa-linkedin" style="font-size:22px"></i></a>
+                                <a href="https://www.twitter.com/" target="_blank"><i class="fa fa-twitter" style="font-size:22px"></i></a>
+                                <a href="https://www.dribbble.com/" target="_blank"><i class="fa fa-dribbble" style="font-size:22px"></i></a>
+                                <a href="https://www.codepen.io/" target="_blank"><i class="fa fa-codepen" style="font-size:22px"></i></a>
+                                <a href="https://www.instagram.com/" target="_blank"><i class="fa fa-instagram" style="font-size:22px"></i></a>
+                            </ul>
+                        </div>
+                        <div class="card c5 col-md-4">
+                            <div class="card_Banner">
+                                <div class="card_Avatar"></div>
+                            </div>
+                            <h3>Riad Alnajjar</h3>
+                            <a href="mailto:riad.16.10@hotmail.com">📧 riad.16.10@hotmail.com</a>
+                            <a>📱 +1 123-456-7890</a>
+                            <ul>
+                                <a href="https://www.linkedin.com/in/" target="_blank"><i class="fa fa-linkedin" style="font-size:22px"></i></a>
+                                <a href="https://www.twitter.com/" target="_blank"><i class="fa fa-twitter" style="font-size:22px"></i></a>
+                                <a href="https://www.dribbble.com/" target="_blank"><i class="fa fa-dribbble" style="font-size:22px"></i></a>
+                                <a href="https://www.codepen.io/" target="_blank"><i class="fa fa-codepen" style="font-size:22px"></i></a>
+                                <a href="https://www.instagram.com/" target="_blank"><i class="fa fa-instagram" style="font-size:22px"></i></a>
+                            </ul>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="nav">
+        <a href="index.html">الصفحة الرئيسية</a>
+    </div>
+
+
+    <script src="js/three1.min.js"></script>
+    <script src="js/TweenMax.min.js"></script>
+    <script src="js/dev.js"></script>
+</body>
+
+</html>

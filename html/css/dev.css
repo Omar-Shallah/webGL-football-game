@@ -1,0 +1,196 @@
+body{
+    
+}
+.dev {}
+.c{
+  position: relative;
+  top: 70px;
+}
+
+.col-md-4 {
+    padding: 0;
+}
+
+.card {
+    margin: 0 80px 20px 80px ;
+    background: rgba(255, 255, 255, 0.58);
+    -webkit-border-radius: 2%;
+    border-radius: 2%;
+    max-width: 268px;
+
+}
+
+.card:hover {
+    background: #fff;
+    -webkit-box-shadow: 10px 10px 10px rgba(9, 91, 126, 0.6);
+    box-shadow: 10px 10px 10px rgba(9, 91, 126, 0.6);
+    -webkit-transform: scale(1.05);
+    -ms-transform: scale(1.05);
+    transform: scale(1.05);
+}
+
+.card_Banner {
+    height: 140px;
+    width: 100%;
+    padding: 60px;
+    -webkit-border-top-right-radius: 2%;
+    border-top-right-radius: 2%;
+    -webkit-border-top-left-radius: 2%;
+    border-top-left-radius: 2%;
+}
+
+.c1 .card_Banner  {
+    background: url(../img/ban1.jpg)no-repeat;
+    -webkit-background-size: cover;
+    background-size: cover;
+    background-position: center;
+
+}
+
+.c4 .card_Banner  {
+    background: url(../img/ban1.jpg)no-repeat;
+    -webkit-background-size: cover;
+    background-size: cover;
+    background-position: center;
+
+}
+
+.c2 .card_Banner {
+    background: url(../img/ban2.jpg)no-repeat;
+    -webkit-background-size: cover;
+    background-size: cover;
+    background-position: center;
+
+}
+
+.c5 .card_Banner {
+    background: url(../img/ban2.jpg)no-repeat;
+    -webkit-background-size: cover;
+    background-size: cover;
+    background-position: center;
+
+}
+
+.c3 .card_Banner {
+    background: url(../img/ban3.jpg)no-repeat;
+    -webkit-background-size: cover;
+    background-size: cover;
+    background-position: center;
+
+}
+
+
+.card_Avatar {
+    margin: auto auto;
+    height: 140px;
+    width: 140px;
+    -webkit-border-radius: 100%;
+    border-radius: 100%;
+    border: 3px solid #c6d0e2;
+    background-color: #22304d;
+    background-image: url(../img/av1.png);
+    -webkit-background-size: cover;
+    background-size: cover;
+    background-position: center;
+    margin-bottom: 10px;
+}
+
+.c1 .card_Avatar {
+    background-image: url(../img/av1.jpg);
+    -webkit-background-size: cover;
+    background-size: cover;
+    background-position: center;
+}
+
+.c2 .card_Avatar {
+    background-image: url(../img/av2.jpg);
+    -webkit-background-size: cover;
+    background-size: cover;
+    background-position: center;
+}
+
+.c3 .card_Avatar {
+    background-image: url(../img/av3.jpg);
+    -webkit-background-size: cover;
+    background-size: cover;
+    background-position: center;
+}
+.c4 .card_Avatar {
+    background-image: url(../img/av4.jpg);
+    -webkit-background-size: cover;
+    background-size: cover;
+    background-position: center;
+}
+.c5 .card_Avatar {
+    background-image: url(../img/av5.jpg);
+    -webkit-background-size: cover;
+    background-size: cover;
+    background-position: center;
+}
+
+.card h3 {
+    margin-top: 75px;
+    text-align: center;
+    color: #010619;
+    text-decoration: underline;
+}
+
+.card > a {
+    display: block;
+    text-decoration: none;
+    padding: 7px 0;
+    font-size: 15px;
+    text-align: center;
+    color: #010619;
+    /*#1c1b1b*/
+}
+
+.card > a:hover {
+    color: #294479;
+    -webkit-transform: scale(1.2);
+    -ms-transform: scale(1.2);
+    transform: scale(1.2);
+    -webkit-transition: .3s ease-in;
+    -o-transition: .3s ease-in;
+    transition: .3s ease-in;
+}
+
+.card ul {
+    padding: 15px 10px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.card ul a {
+    margin-left: 4px;
+    margin-right: 4px;
+    color: #585858;
+}
+
+.card ul a i:hover {
+    color: #294479;
+    -webkit-transform: scale(1.2);
+    -ms-transform: scale(1.2);
+    transform: scale(1.2);
+}
+
+@media (min-width: 300px) .card {
+    width: 66.66666667%;
+    margin: 0;
+}
+
+.skewr-bottom:after {
+    content: ' ';
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 15%;
+    left: 0;
+    bottom: -6.5%;
+    -webkit-transform: skewY(2deg);
+    -ms-transform: skewY(2deg);
+    transform: skewY(2deg);
+    z-index: 1;
+    background: #fff;
+}
+
