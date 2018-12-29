@@ -63,7 +63,6 @@
         function preloader() {
             loading.style.display = "none";
             body.style.display = "block";
-            console.log(scene);
 
         }
         //       window.onload = setTimeout(preloader, 2600);
@@ -74,6 +73,7 @@
         let keyup = "W".charCodeAt(0);
         let keydown = "S".charCodeAt(0);
         let keyspeed = "E".charCodeAt(0);
+        let reset=true;
         let scene,
             renderer,
             container,
@@ -90,7 +90,7 @@
         let clock, ready = false;
         let mouseDown = false;
         let goal1, goal2;
-        let hemisphereLight;
+        let hemisphereLight,ambientLight;
         let raycaster, collidableMeshList = [];
         let shape, shapeGeometry;
         let player;
@@ -112,10 +112,8 @@
                 model.object.rotation.y = r;
                 collidableMeshList.push(model.object);
                 scene.add(model.object);
-                //                collidableMeshList.push(model.object);
                 model.ready = true;
-                console.log("goal ready");
-                console.log(gltf);
+              
 
             });
         }
@@ -137,9 +135,10 @@
                         if (node instanceof THREE.Mesh) { node.castShadow = true; node.receiveShadow = true; }
                     });
                     model.mesh.add(object);
+                    collidableMeshList.push(object);
                     model.ob1 = object;
                     model.ready++;
-                    console.log("table ready");
+                    
                 });
             });
 
@@ -160,11 +159,8 @@
                 model.mesh.add(object);
                 model.vase = object;
                 collidableMeshList.push(object);
-                //                 console.log(object);
                 model.ready++;
-                console.log("vases ready");
-                console.log(gltf);
-
+                
             });
             loader = new THREE.GLTFLoader();
             loader.load('models/groot_dancing_2/scene.gltf', function (gltf) {
@@ -182,8 +178,7 @@
                 model.grootaction.play();
                 scene.add(object);
                 model.ready++;
-                //                 console.log(gltf)
-                console.log("groot ready");
+                
             });
             loader = new THREE.GLTFLoader();
             loader.load('models/dancing_stormtrooper/scene.gltf', function (gltf) {
@@ -199,15 +194,12 @@
                 model.trooperaction.play();
                 scene.add(object);
                 model.ready++;
-                //                 console.log(gltf)
-                console.log("trooper ready");
-                console.log(gltf);
+            
 
             });
             loader = new THREE.GLTFLoader();
             loader.load('models/teapot/scene.gltf', function (gltf) {
-                console.log("teapot", gltf);
-                let object = gltf.scene;
+               let object = gltf.scene;
                 object.traverse(function (node) {
                     if (node instanceof THREE.Mesh) {
                         node.castShadow = true;
@@ -225,8 +217,7 @@
             this.mesh.position.set(60, 0, -850);
             scene.add(this.mesh);
             this.mesh.position.x += 100;
-            //console.log(model);
-        }
+         }
         let Ball = function () {
             this.Speed = 1000.0;
             this.RotationSpeed = Math.PI * 5;
@@ -237,11 +228,10 @@
 
             let ballTexture = new THREE.TextureLoader().load('img/ballTexture.jpg');
 
-            let sphere = new THREE.SphereGeometry(10, 10, 30);
+            let sphere = new THREE.SphereGeometry(16, 10, 40);
             let material1 = new THREE.MeshPhongMaterial({ map: ballTexture });
 
             this.object = new THREE.Mesh(sphere, material1);
-            //    console.log(this.object);
             this.object.name = "ball";
             this.object.castShadow = true;
             this.object.position.set(0, 15, 100);
@@ -282,8 +272,7 @@
                     if (node instanceof THREE.Mesh) { node.castShadow = true; }
                 });
                 model.object = gltf.scene.children[0];
-                //  console.log(gltf);
-
+        
                 model.mixer = new THREE.AnimationMixer(model.object);
                 let animations = gltf.animations;
                 for (let i = 0; i < animations.length; i++) {
@@ -298,13 +287,11 @@
                 model.previousAction = model.actions['Idle'];
                 model.activeAction = model.actions['Idle'];
                 model.activeAction.play();
-                model.object.scale.set(15, 15, 15);
+                model.object.scale.set(20, 20, 20);
                 model.object.position.set(-50, 0, 100);
                 model.object.rotation.set(0, model.angle, 0);
                 scene.add(model.object);
-                //                collidableMeshList.push(model.object);
                 model.ready = true;
-                console.log("robot ready");
             });
 
             this.fadeToAction = function (name, duration) {
@@ -320,11 +307,15 @@
                 }
                 this.previousAction = this.activeAction;
             }
+            this.isOut = function () {
+                let pos = this.object.position;
+                return pos.x > 2060 || pos.x < -2060 || pos.z > 1050 || pos.z < -1050;
+            }
         }
         let human = function () {
             let model = this;
             this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            this.camera.position.set(0, 100, -950);
+            this.camera.position.set(0, 150, -950);
             this.camera.lookAt(new THREE.Vector3(0, 0, 0));
             let loader = new THREE.GLTFLoader();
             this.object = null;
@@ -336,12 +327,10 @@
                 model.object = gltf.scene.children[0].children[0];
                 model.object.material = new THREE.MeshPhongMaterial({ color: 0x525252 })
                 model.object.scale.set(30, 30, 30);
-                model.object.position.set(100, 0, -800);
+                model.object.position.set(50, 0, -800);
                 scene.add(model.object);
                 collidableMeshList.push(model.object);
-                //  console.log(gltf);
                 model.ready = true;
-                console.log("human ready");
             });
         }
         let directlight = function (x, y, z) {
@@ -401,7 +390,6 @@
 
             this.object = new THREE.Mesh(this.Geometry, this.Material);
             this.object.receiveShadow = true;
-            //            this.object.castShadow = true;
             this.object.position.y = y / 2;
             this.object.position.y -= 25;
         }
@@ -449,8 +437,7 @@
 
             camera = camera1;
 
-            //controls = new THREE.PointerLockControls( camera );
-
+      
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(width, height);
             renderer.setClearColor(0xfff6e6);
@@ -548,10 +535,12 @@
             function guiChanged() {
                 if(effectController.night){
                     hemisphereLight.intensity=0.1;
+                    ambientLight.intensity=0.1;
                     effectController.effect=night;
                 }
                 else{
                     hemisphereLight.intensity=0.5;
+                    ambientLight.intensity=0.5;
                     effectController.effect=day;
                 }
                 if (effectController.supervisorView) {
@@ -592,9 +581,10 @@
             let Directlight2 = new directlight(x, y, -z);
             let Directlight3 = new directlight(-x, y, z);
             let Directlight4 = new directlight(x, y, z);
-                hemisphereLight = new THREE.HemisphereLight(0xffff0b, 0x080820, 0.5);
+            hemisphereLight = new THREE.HemisphereLight(0xffff0b, 0x080820, 0.5);
+            ambientLight = new THREE.AmbientLight(0xa59f75, 0.5)
             scene.add(hemisphereLight);
-            //            scene.add(new THREE.AmbientLight(0xa59f75, 0.6));
+            scene.add(ambientLight);
         }
         function Loadcharcters() {
             player = new Robot();
@@ -708,6 +698,25 @@
         function addbetween(before, change, min, max) {
             return Math.min(max, Math.max(min, before + change));
         }
+        function dist(vertex1, vertex2) {
+            return Math.sqrt((vertex1.x - vertex2.x) ** 2 + (vertex1.y - vertex2.y) ** 2 + (vertex1.z - vertex2.z) ** 2);
+        } 
+        function collisitions(object) {
+            var originPoint = object.position.clone();
+            for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (let dz = -1; dz <= 1; dz++) {
+                ray = new THREE.Raycaster(originPoint, new THREE.Vector3(dx, dy, dz));
+                let collisionResults = ray.intersectObjects(collidableMeshList, true);
+                for (let i = 0; i < collisionResults.length; i++) {
+                    let node = collisionResults[i];
+                    if (node.object == object) continue;
+                    if (node.distance < 15) {
+                        
+                        return node;
+                    }
+                }
+            }
+            return null;
+        }
         function updatecharachter() {
             player.mixer.update(delta);
             dome.grootmixer.update(delta);
@@ -743,7 +752,7 @@
             }
 
             player.object.rotation.y = (player.angle);
-            if (collisitions(player.object)) {
+            if (collisitions(player.object)!=null) {
                 player.object.position.x -= player.velocity.x;
                 player.object.position.z -= player.velocity.z;
                 if(effectController.camerawithplayer){
@@ -752,36 +761,10 @@
                 }
             }
             supervisor.camera.position.x = -1 * player.object.position.x * 0.2;
-        }
-        function dist(vertex1, vertex2) {
-            return Math.sqrt((vertex1.x - vertex2.x) ** 2 + (vertex1.y - vertex2.y) ** 2 + (vertex1.z - vertex2.z) ** 2);
-        }
-        function coll1(ray, object) {
-            var collisionResults = ray.intersectObjects(collidableMeshList, true);
-            //                console.log(collisionResults);
-            for (let i = 0; i < collisionResults.length; i++) {
-                let node = collisionResults[i];
-                if (node.object === object) continue;
-                if (node.distance < 20) {
-                    //collision occurs
-                    //                        console.log("x ",ball.object.position.x);
-                    //                        console.log("z ",ball.object.position.z);
-                    // console.log(object,node);
-                    //  return;
-                    // break;  
-                    return 1;
-                }
+            if(player.isOut()){
+                player.object.position.x=0;
+                player.object.position.z=0;
             }
-            return 0;
-        }
-        function collisitions(object) {
-            //            console.log(scene,object);
-            var originPoint = object.position.clone();
-            for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (let dz = -1; dz <= 1; dz++) {
-                ray = new THREE.Raycaster(originPoint, new THREE.Vector3(dx, dy, dz));
-                if (coll1(ray, object)) return 1;
-            }
-            return 0;
         }
         function updateball() {
             ball.velocity.x -= ball.velocity.x * 2.0 * delta;
@@ -807,24 +790,37 @@
             ball.object.rotation.z += ball.anglevelocity;
             
             if (Math.abs(ball.velocity.x) <= eps && Math.abs(ball.velocity.z) <= eps ) ball.object.position.y = 10;
-            
-            if (collisitions(ball.object)) {
+            let coll=collisitions(ball.object);
+            if (coll!==null) {
                 ball.object.position.x -= ball.velocity.x* Math.sin(ball.angle);
                 ball.object.position.z -= ball.velocity.z* Math.cos(ball.angle);
                 
-                ball.angle += Math.PI;
+                let u1=ball.velocity.x * Math.sin(ball.angle);
+                let u2=ball.velocity.z * Math.cos(ball.angle);
+                let v1=coll.face.normal.x;
+                let v2=coll.face.normal.z;
+//              
+                let p=u1*v1+u2*v2;
+                let q=Math.sqrt(u1**2+u2**2)*Math.sqrt(v1**2+v2**2);
+                let angle=Math.acos(p/q);
+                
+                if(angle>=-Math.PI*2 && angle<=Math.PI*2){
+                    ball.angle += 2 * angle;
+                }
+                else{
+                    ball.angle+=Math.PI;
+                }
                 
                 ball.object.position.x += ball.velocity.x * Math.sin(ball.angle);
                 ball.object.position.z += ball.velocity.z * Math.cos(ball.angle);
             }
-            if (ball.object.position.y <= 10) {
+            if (ball.object.position.y <= 16) {
                 ball.velocity.y = Math.max(0, ball.velocity.y);
-                ball.velocity.y += ball.velocity.x *2;
+                ball.velocity.y += Math.max(ball.velocity.x,ball.velocity.z) *2;
                 
-                ball.object.position.y = 10;
+                ball.object.position.y = 16;
             }
             if (ball.isOut()) {
-                console.log("out");
                 ball.object.position.x = player.object.position.x;
                 ball.object.position.z = player.object.position.z;
                 ball.canshoot = true;
@@ -839,7 +835,6 @@
             }
             else {
                 ready = player.ready && supervisor.ready && dome.ready == dome.np;
-                console.log(ready);
                 if (ready) {
                     setTimeout(preloader, 2600);
                 }
@@ -849,16 +844,23 @@
             updatecharachter();
             updateball();
 
+            let ve=new THREE.Vector3();
             if(effectController.camerawithplayer){
-                let ve=new THREE.Vector3();
                 ve.x=player.object.position.x;
-                ve.y=player.object.position.y;
+                ve.y=player.object.position.y+100;
                 ve.z=player.object.position.z;
                 controls.target = ve;
+                camera.lookAt(ve);
+                reset=false;
+            }
+            else{
+                if(!reset){
+                    controls.reset();   
+                    reset=true;
+                }
             }
             camera.position.z=addbetween(camera.position.z,0,-1020,1020);
             camera.position.x=addbetween(camera.position.x,0,-2040,2040);
-//            controls.update();
             supervisor.camera.lookAt(player.object.position);
             supervisor.object.lookAt(player.object.position);
             dome.groot.lookAt(ball.object.position);
